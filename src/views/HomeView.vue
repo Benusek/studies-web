@@ -1,38 +1,61 @@
 <script setup>
 
-import {ref} from "vue";
+import {onMounted, ref} from "vue";
 import apiFetch from "@/helpers/apiFetch.js";
 
-const form = ref({
-  data: {
-    login: String,
-    password: String
+const progress = ref(0)
+const videos = ref([])
+
+onMounted(async() => {
+  const result = await apiFetch('GET', '/video/start/0/count/30')
+  if (result.videos) {
+    // console.log(result.videos)
+    result.videos.forEach(v => {
+      const video = v
+      video.isHover = false
+      video.progress = 0
+      videos.value.push(video)
+    })
   }
+  console.log(videos.value)
 })
 
-const sendForm = async() => {
-  const result = await apiFetch('POST', '/login', form.value.data)
-  console.log(result);
+const mouseenterVideo = event => {
+  event.target.play()
+}
+
+const mouseleaveVideo = event => {
+  event.target.pause()
+  event.target.currentTime = 0
+}
+
+const hoverProgress = (progress) => {
+  console.log(1)
+  progress = event.target.currentTime
 }
 
 </script>
 
 <template>
-  <main class="mt-20">
-    Привет
+  <main class="container mx-auto p-3 border-1 border-t-0 border-gray-200
+      gap-3 border-b border-gray-200
+      grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+    <div class="rounded-lg shadow-sm min-w-25 cursor-pointer" v-for="video in videos">
+      <div @mouseenter="video.isHover = true" @mouseleave="video.isHover = false"
+           class="bg-contain rounded-t-lg bg-top
+           w-full bg-top bg-no-repeat h-0 relative" style="padding-top:56.25%;"
+           :style="{'background-image': `url('http://videoapi/${video.photo_file}')`}">
+        <video disablePictureInPicture muted @mouseover="hoverProgress(video.progress)"  @mouseenter="mouseenterVideo" @mouseleave="mouseleaveVideo" v-if="video.isHover"
+               class="absolute top-0 rounded-t-lg h-full bg-contain bg-black w-full">
+          <source :src="`http://videoapi/${video.video_file}`" type="video/mp4" />
+        </video>
+        <input type="range" class="absolute bottom-0 w-full" v-model="progress">
+      </div>
+      {{progress}}
+      <div class="p-2 h-20">
+        <p class="text-lg font-semibold leading-6 break-words line-clamp-2 ">{{video.title}}</p>
+        <p class="line-clamp-1 mt-1 text-gray-600">{{video.user.login}}</p>
+      </div>
+    </div>
   </main>
-  <p class="line-clamp-2 w-50">
-    аааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааа
-    аааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааа
-    аааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааа
-    аааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааа
-    аааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааа
-    аааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааа
-    аааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааа
-    аааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааа
-  </p>
-  <button type="button" class="text-white bg-[#FF9119] hover:bg-[#FF9119]/80 focus:ring-4 focus:outline-none focus:ring-[#FF9119]/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:hover:bg-[#FF9119]/80 dark:focus:ring-[#FF9119]/40 me-2 mb-2">
-    <svg class="w-4 h-4 me-2 -ms-1" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="bitcoin" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M504 256c0 136.1-111 248-248 248S8 392.1 8 256 119 8 256 8s248 111 248 248zm-141.7-35.33c4.937-32.1-20.19-50.74-54.55-62.57l11.15-44.7-27.21-6.781-10.85 43.52c-7.154-1.783-14.5-3.464-21.8-5.13l10.93-43.81-27.2-6.781-11.15 44.69c-5.922-1.349-11.73-2.682-17.38-4.084l.031-.14-37.53-9.37-7.239 29.06s20.19 4.627 19.76 4.913c11.02 2.751 13.01 10.04 12.68 15.82l-12.7 50.92c.76 .194 1.744 .473 2.829 .907-.907-.225-1.876-.473-2.876-.713l-17.8 71.34c-1.349 3.348-4.767 8.37-12.47 6.464 .271 .395-19.78-4.937-19.78-4.937l-13.51 31.15 35.41 8.827c6.588 1.651 13.05 3.379 19.4 5.006l-11.26 45.21 27.18 6.781 11.15-44.73a1038 1038 0 0 0 21.69 5.627l-11.11 44.52 27.21 6.781 11.26-45.13c46.4 8.781 81.3 5.239 95.99-36.73 11.84-33.79-.589-53.28-25-65.99 17.78-4.098 31.17-15.79 34.75-39.95zm-62.18 87.18c-8.41 33.79-65.31 15.52-83.75 10.94l14.94-59.9c18.45 4.603 77.6 13.72 68.81 48.96zm8.417-87.67c-7.673 30.74-55.03 15.12-70.39 11.29l13.55-54.33c15.36 3.828 64.84 10.97 56.85 43.03z"></path></svg>
-    Pay with Bitcoin
-  </button>
 </template>

@@ -3,7 +3,7 @@
 import {onMounted, ref} from "vue";
 import apiFetch from "@/helpers/apiFetch.js";
 import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
-import {faUserCircle, faVolumeHigh, faVolumeXmark} from "@fortawesome/free-solid-svg-icons";
+import {faEllipsisVertical, faUserCircle, faVolumeHigh, faVolumeXmark} from "@fortawesome/free-solid-svg-icons";
 
 const isResponse = ref(false)
 const videos = ref([])
@@ -112,18 +112,18 @@ const toggleMutedVideo = (video, videoElement) => {
 </script>
 
 <template>
-  <main class="container mx-auto p-3 border-1 border-t-0 border-gray-200
-      border-b border-gray-200 h-screen">
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
-      <div v-if="!isResponse" class="rounded-lg shadow-sm min-w-25 cursor-pointer animate-pulse" v-for="i in 12">
+  <div class="container p-3 border-1 border-t-0 border-gray-200
+      border-b border-gray-200">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 h-auto">
+      <div v-if="!isResponse" class="rounded-lg shadow-sm min-w-25 cursor-pointer animate-pulse" v-for="i in 22">
         <div class="bg-contain rounded-t-lg bg-top w-full bg-top bg-gray-300 bg-no-repeat h-0 relative" style="padding-top:56.25%;"></div>
         <div class="p-2 grid grid-cols-6 gap-1">
           <div class="flex justify-center py-1.5">
-            <div class="rounded-full w-[36px] h-[36px] bg-gray-300"></div>
+            <div class="py-1.5 col-span-1 aspect-square w-10 rounded-full bg-gray-300"></div>
           </div>
           <div class="col-span-5">
-            <p class="h-3 opacity-10 bg-current text-lg font-semibold leading-6 break-words line-clamp-2 mb-3"></p>
-            <p class="h-3 opacity-10 bg-current text-lg font-semibold leading-6 break-words line-clamp-2"></p>
+            <p class="text-xs sm:text-sm h-2 opacity-10 bg-current text-lg font-semibold leading-6 break-words line-clamp-2 mb-3"></p>
+            <p class="h-2 opacity-10 bg-current text-lg font-semibold leading-6 break-words line-clamp-2"></p>
           </div>
         </div>
       </div>
@@ -167,25 +167,28 @@ const toggleMutedVideo = (video, videoElement) => {
               {{ video.time }}</p>
           </div>
         </div>
-        <div class="p-2 grid grid-cols-6 gap-1">
-          <div class="flex justify-center py-1.5">
+        <div class="p-2 block grid grid-cols-5 gap-1">
             <RouterLink to="/">
               <template v-if="video.user.photo_file === null">
-                <FontAwesomeIcon class="text-4xl text-gray-300" :icon="faUserCircle"/>
+                <FontAwesomeIcon class="w-full py-1.5 col-span-1 text-4xl text-gray-300" :icon="faUserCircle"/>
               </template>
               <template v-else>
-                <img class="rounded-full w-[36px] h-[36px]" :src="`http://videoapi/${video.user.photo_file}`" alt="user">
+                <img class="py-1.5 col-span-1 rounded-full aspect-square w-10 h-20" :src="`http://videoapi/${video.user.photo_file}`" alt="user">
               </template>
             </RouterLink>
-          </div>
-          <div class="col-span-5">
-            <RouterLink to="/"><p class="text-lg font-semibold leading-6 break-words line-clamp-2 ">{{ video.title }}</p>
+          <div class="col-span-3">
+            <RouterLink to="/">
+              <p class="text-xs sm:text-sm md:text-base font-semibold leading-none break-words line-clamp-2 ">{{ video.title }}</p>
             </RouterLink>
-            <RouterLink to="/"><p class="line-clamp-1 mt-1 text-gray-600">{{ video.user.login }}</p></RouterLink>
+            <RouterLink to="/">
+              <p class="text-xs sm:text-sm line-clamp-1 mt-1 text-gray-600">{{ video.user.login }}</p>
+            </RouterLink>
           </div>
-
+          <template v-if="true">
+            <FontAwesomeIcon class="col-span-1 mx-auto col-span-1 mt-1 text-sm" :icon="faEllipsisVertical" />
+          </template>
         </div>
       </div>
     </div>
-  </main>
+  </div>
 </template>

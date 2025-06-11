@@ -112,14 +112,13 @@ const toggleMutedVideo = (video, videoElement) => {
 </script>
 
 <template>
-  <div class="container p-3 border-1 border-t-0 border-gray-200
-      border-b border-gray-200">
+  <div class="p-3 w-full">
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 h-auto">
-      <div v-if="!isResponse" class="rounded-lg shadow-sm min-w-25 cursor-pointer animate-pulse" v-for="i in 22">
+      <div v-if="!isResponse" class="rounded-lg shadow-sm min-w-25 cursor-pointer animate-pulse" v-for="i in 20">
         <div class="bg-contain rounded-t-lg bg-top w-full bg-top bg-gray-300 bg-no-repeat h-0 relative" style="padding-top:56.25%;"></div>
         <div class="p-2 grid grid-cols-6 gap-1">
           <div class="flex justify-center py-1.5">
-            <div class="py-1.5 col-span-1 aspect-square w-10 rounded-full bg-gray-300"></div>
+            <div class="py-1.5 col-span-1 aspect-square w-10 rounded-full bg-gray-300" />
           </div>
           <div class="col-span-5">
             <p class="text-xs sm:text-sm h-2 opacity-10 bg-current text-lg font-semibold leading-6 break-words line-clamp-2 mb-3"></p>
@@ -135,7 +134,7 @@ const toggleMutedVideo = (video, videoElement) => {
              :style="{'background-image': `url('http://videoapi/${video.photo_file}')`}">
           <canvas ref="canvas" :class="{'hidden': video.photo_file !== null}" class="h-full mx-auto left-0 right-0 top-0 absolute"></canvas>
           <div>
-            <div :class="{'hidden': !video.isHover}">
+            <div class="transition delay-250" :class="video.isHover ? 'opacity-100' : 'opacity-0'">
               <video disablePictureInPicture muted ref="videoElement"
                      @timeupdate="timeupdateVideo(video, $refs.videoElement[index])"
                      @loadeddata="loadVideo(video, $refs.videoElement[index], $refs.canvas[index])"

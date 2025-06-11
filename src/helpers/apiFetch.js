@@ -31,9 +31,9 @@ export default async function(method, url, body = null, isBlob = false) {
     }
 
     try {
-        if (isBlob && await response.status !== 422) {
-            return await response.blob()
-        }
+        // if (isBlob && await response.status !== 422) {
+        //     return await response.blob()
+        // }
         return await response.json()
     }
     catch (e) {

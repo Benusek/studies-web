@@ -1,4 +1,4 @@
-export default async function(method, url, body = null, isBlob = false) {
+export default async function(method, url, body = null) {
     const options = {
         method,
         headers: {
@@ -27,13 +27,10 @@ export default async function(method, url, body = null, isBlob = false) {
     console.log(response);
     if (response.status === 401) {
         localStorage.removeItem('user-token')
-        window.location.replace('/auth')
+        window.location.replace('/')
     }
 
     try {
-        // if (isBlob && await response.status !== 422) {
-        //     return await response.blob()
-        // }
         return await response.json()
     }
     catch (e) {

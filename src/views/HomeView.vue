@@ -114,7 +114,7 @@ const toggleMutedVideo = (video, videoElement) => {
 <template>
   <div class="p-3 w-full">
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 h-auto">
-      <div v-if="!isResponse" class="rounded-lg shadow-sm min-w-25 cursor-pointer animate-pulse" v-for="i in 20">
+      <div v-if="!isResponse" class="rounded-lg shadow-sm min-w-25 cursor-pointer animate-pulse" v-for="i in 30">
         <div class="bg-contain rounded-t-lg bg-top w-full bg-top bg-gray-300 bg-no-repeat h-0 relative" style="padding-top:56.25%;"></div>
         <div class="p-2 grid grid-cols-6 gap-1">
           <div class="flex justify-center py-1.5">

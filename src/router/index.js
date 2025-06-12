@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
-import AboutView from "@/views/AboutView.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -9,13 +8,15 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: HomeView,
-    },
-    {
-      path: '/about',
-      name: 'about',
-      component: AboutView,
-    },
+    }
   ],
+})
+
+router.beforeResolve(async to => {
+  console.log(to)
+  if (to.meta.forAuth && !localStorage.getItem('user-token')) {
+    await router.replace('/')
+  }
 })
 
 export default router

@@ -1,18 +1,18 @@
 <script setup>
 
-import {onMounted, ref} from "vue";
+import { onMounted, provide, ref } from 'vue'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 import {
-  faArrowLeft,
+  faArrowLeft, faArrowRightFromBracket,
   faBars, faBook,
-  faC, faExclamation,
-  faGear,
+  faC,
+  faGear, faHeadset,
   faList,
   faN,
   faPlus,
   faSearch,
-  faUser, faUserCircle, faXmark
-} from "@fortawesome/free-solid-svg-icons";
+  faUser, faUserPlus, faXmark
+} from '@fortawesome/free-solid-svg-icons'
 import {
   faFlutter,
   faGolang,
@@ -25,14 +25,16 @@ import {
 } from "@fortawesome/free-brands-svg-icons";
 import apiFetch from "@/helpers/apiFetch.js";
 import Error from "@/components/Error.vue";
+import Toast from '@/components/Toast.vue'
+import router from '@/router/index.js'
 
 const allCategories = ref([])
 const data = ref({
   lists: {
     isOpenList: false,
     isOpenAside: false,
-    isFileImage: false,
     searchExpansion: false,
+    isProcessing: false
   },
   modals: {
     isRegistration: false,
@@ -49,6 +51,7 @@ const data = ref({
         email: '',
         photo_file: ''
       },
+      fileURL: '',
       errors: {}
     },
     authorization: {
@@ -58,12 +61,69 @@ const data = ref({
       },
       errors:{}
     },
-
+    toast: {
+      active: false,
+      message: '',
+      icon: Object
+    }
   },
-
+  user: {
+    name: '',
+    surname: '',
+    patronymic: '',
+    login: '',
+    email: '',
+    photo_file: '',
+    subscribers_count: '',
+    subscribers: [],
+    subscribe: []
+  },
   videoQuery: '',
   categoryQuery: '',
 })
+
+const id = ref(localStorage.getItem('user-id'))
+const token = ref(localStorage.getItem('user-token'))
+const roleId = ref(localStorage.getItem('user-role'))
+const updateToken = (newToken) => {
+  updateValue('user-token', newToken)
+  updateRoleId(null)
+  updateId(null)
+  token.value = newToken
+}
+
+const updateRoleId = (newRoleId) => {
+  updateValue('user-role', newRoleId)
+  roleId.value = newRoleId
+}
+
+const updateId = (newId) => {
+  updateValue('user-id', newId)
+  id.value = newId
+}
+
+const updateValue = (storageId, newValue) => {
+  if (!newValue) {
+    localStorage.removeItem(storageId)
+  }
+  else {
+    localStorage.setItem(storageId, newValue)
+  }
+}
+
+provide('token', token)
+provide('user-role', roleId)
+provide('updateToken', updateToken)
+
+const logout = async() => {
+  await apiFetch('GET', '/logout')
+  updateToken(null)
+  await router.replace('/')
+}
+
+const updateToastStatus = () => {
+  data.value.forms.toast.active = false
+}
 
 onMounted(async () => {
   const result = await apiFetch('GET', `/category`)
@@ -71,20 +131,21 @@ onMounted(async () => {
     allCategories.value = result
     categories.value = result
   }
+  await getInfo()
 })
 
 const icons = {
-  'C#': faWpforms,
-  'Vue': faVuejs,
-  'Next.js': faN,
-  'Node.js': faNodeJs,
-  'React': faReact,
-  'Flutter': faFlutter,
-  'Go': faGolang,
-  'Unity': faUnity,
-  'Java': faJava,
-  'C++': faC,
-  'Прочее': faBook
+  1: faWpforms,
+  2: faVuejs,
+  3: faN,
+  4: faNodeJs,
+  6: faReact,
+  7: faFlutter,
+  8: faGolang,
+  9: faUnity,
+  11: faJava,
+  10: faC,
+  12: faBook
 }
 const categories = ref([])
 
@@ -103,7 +164,11 @@ const sendSearch = async (expansion = false) => {
 }
 
 const registerForm = async (form) => {
-  data.value.forms.errors = {}
+  if (data.value.lists.isProcessing) {
+    return
+  }
+  data.value.lists.isProcessing = true
+  data.value.forms.registration.errors = {}
   const formData = new FormData()
   for (const key in form) {
       if (form[key] !== '' && key !== 'photo_file') {
@@ -116,14 +181,53 @@ const registerForm = async (form) => {
   if (result?.error) {
     data.value.forms.registration.errors = result.error.errors
   }
+
+  if (result?.data) {
+    data.value.modals.isRegistration = false
+    showToast('Вы успешно зарегистрировались', faUserPlus)
+  }
+  data.value.lists.isProcessing = false
 }
 
 const authForm = async (form) => {
-  data.value.forms.errors = {}
+  if (data.value.lists.isProcessing) {
+    return
+  }
+
+  data.value.lists.isProcessing = true
+  data.value.forms.authorization.errors = {}
   const result = await apiFetch('POST', '/login', form)
+
   console.log(result)
   if (result?.error) {
     data.value.forms.authorization.errors = result.error.errors
+  }
+
+  if (result?.data) {
+    updateToken(result.data.user_token)
+    updateRoleId(result.data.role_id)
+    updateId(result.data.user_id)
+    await getInfo()
+    data.value.modals.isAuthorization = false
+    showToast('Успешный вход', faUser)
+  }
+
+  data.value.lists.isProcessing = false
+}
+
+const showToast = (message, icon) => {
+  data.value.forms.toast.active = true
+  data.value.forms.toast.message = message
+  data.value.forms.toast.icon = icon
+}
+
+const getInfo = async() => {
+  if (localStorage.getItem('user-id')) {
+    const information = await apiFetch('GET', `/user/${localStorage.getItem('user-id')}`)
+    if (information?.data) {
+      data.value.user = information.data
+      console.log(data.value.user)
+    }
   }
 }
 
@@ -135,23 +239,10 @@ const toggleAside = () => {
   data.value.lists.isOpenAside === true ? data.value.lists.isOpenAside = false : data.value.lists.isOpenAside = true
 }
 
-const uploadUserPhoto = (input, large, medium, small) => {
-  data.value.lists.isFileImage = true
-  const images = [large, medium, small]
-  const file = input.target.files
-  console.log(file)
-  if (file) {
-    images.forEach(image => {
-      image.src = URL.createObjectURL(new Blob(file))
-    })
-  }
-  file.length === 0 ? data.value.lists.isFileImage = false : null
-}
-
 const changeFile = event => {
   data.value.forms.registration.form.photo_file = event.target.files[0]
+  data.value.forms.registration.fileURL = URL.createObjectURL(event.target.files[0])
 }
-
 
 </script>
 
@@ -197,36 +288,47 @@ const changeFile = event => {
         </ul>
       </nav>
       <ul v-if="data.lists.isOpenList"
-          class="absolute right-0 z-2 rounded-b-xl shadow-xl w-full sm:w-60 md:w-70 h-auto bg-gray-100 cursor-pointer">
-        <li class="p-3 flex flex-row gap-2">
-          <div class="rounded-full w-[50px] h-[50px] text-lg bg-gray-500 p-2 hidden sm:block"/>
-          <div class="flex flex-col text-lg justify-center rounded-t-xl leading-none">
-            <span>ITujh</span>
-            <span class="text-sm">tujhustify@gmail.com</span>
+          class="absolute right-0 z-2 rounded-bl-xl shadow-xl w-full sm:w-60 md:w-70 h-auto bg-gray-100 cursor-pointer">
+        <li v-if="token" class="p-3 flex flex-row gap-2">
+          <img :src="data.user.photo_file != null ? `http://videoapi/${data.user.photo_file}` : '/src/assets/default.png'" class="rounded-full w-20 h-20 text-lg p-2 hidden sm:block" alt="">
+          <div class="flex flex-col text-lg justify-center rounded-t-xl leading-none gap-1 w-120 sm:w-40">
+            <span class="break-words  line-clamp-1">{{data.user.name}}</span>
+            <div class="flex flex-col">
+              <span class="text-xs text-gray-600 break-words  line-clamp-1">{{ '@' + data.user.login}}</span>
+              <span class="text-xs text-gray-600 break-words  line-clamp-1">{{data.user.email}}</span>
+            </div>
+
           </div>
         </li>
-        <li class="p-3 border-b border-gray-300 hover:bg-gray-200" @click="data.modals.isRegistration = true">
+        <li v-if="!token" class="p-3 border-b border-gray-300 hover:bg-gray-200" @click="data.modals.isRegistration = true">
           Зарегистрироваться
         </li>
-        <li class="p-3 border-b border-gray-300 hover:bg-gray-200" @click="data.modals.isAuthorization = true"> Войти</li>
-        <li class="p-3 border-b border-gray-300 hover:bg-gray-200">
+        <li v-if="!token" class="p-3 border-b rounded-bl-xl border-gray-300 hover:bg-gray-200" @click="data.modals.isAuthorization = true"> Войти</li>
+        <li v-if="token" class="p-3 border-b border-gray-300 hover:bg-gray-200">
           <FontAwesomeIcon class="flex items-center mr-3" :icon="faGear"/>
           <span>Личный кабинет</span>
         </li>
-        <li class="p-3 border-b border-gray-300 hover:bg-gray-200">
-          <FontAwesomeIcon class="p-x mr-3" :icon="faExclamation"/>
+        <li v-if="token && parseInt(roleId) === 2" class="p-3 border-b border-gray-300 hover:bg-gray-200">
+          <FontAwesomeIcon class="p-x mr-3" :icon="faHeadset"/>
           <span>Жалобы</span>
         </li>
-        <li class="p-3 border-b border-gray-300 hover:bg-gray-200">
+        <li v-if="token && parseInt(roleId) === 1" class="p-3 border-b border-gray-300 hover:bg-gray-200">
           <FontAwesomeIcon class="flex items-center mr-3" :icon="faPlus"/>
           <span>Добавить видео</span>
         </li>
-        <li class="p-3 hover:bg-gray-200 rounded-b-xl">
+        <li v-if="token && parseInt(roleId) === 1" class="p-3 border-b border-gray-300 hover:bg-gray-200">
           <FontAwesomeIcon class="flex items-center mr-3" :icon="faList"/>
           <span class="col-span-2">Плейлисты</span>
         </li>
+        <li v-if="token" class="p-3 hover:bg-gray-200 rounded-bl-xl border-b border-gray-300 hover:bg-gray-200" @click="logout">
+          <FontAwesomeIcon class="flex items-center mr-3" :icon="faArrowRightFromBracket"/>
+          <span class="col-span-2">Выйти</span>
+        </li>
       </ul>
     </header>
+
+<!--Тело страницы-->
+  <!--Левая панель-->
     <div class="flex flex-col sm:flex-row">
       <main class="z-2 g-gray-100 z-2 min-w-20 break-words">
         <div class="sticky justify-center top-16 max-h-[calc(100vh-4rem)] overflow-auto sm:flex w-full"
@@ -245,7 +347,7 @@ const changeFile = event => {
                  shadow-xs text-xs font-sans gap-3 cursor-pointer"
                    :class="{'w-15': data.lists.isOpenAside}">
                 <div class="flex items-center justify-center ms-3 ">
-                  <FontAwesomeIcon :icon="icons[category.name]" class="text-lg"/>
+                  <FontAwesomeIcon :icon="icons[`${category.id}`]" class="text-lg"/>
                 </div>
                 <div v-if="!data.lists.isOpenAside">
                   <span>{{ category.name }}</span>
@@ -253,26 +355,27 @@ const changeFile = event => {
               </div>
             </li>
             <li>
-              <RouterLink to="/"><p class="font-medium text-xs pt-2 cursor-pointer"
-                                    :class="{'text-xs': data.lists.isOpenAside, 'ps-3': !data.lists.isOpenAside}">
-                Плейлисты</p></RouterLink>
+              <RouterLink to="/">
+                <p class="font-medium text-xs pt-2 cursor-pointer" :class="{'text-xs': data.lists.isOpenAside, 'ps-3': !data.lists.isOpenAside}">Плейлисты</p>
+              </RouterLink>
             </li>
             <li>
-              <RouterLink to="/"><p class="font-medium text-xs pt-2 cursor-pointer"
-                                    :class="{'text-xs': data.lists.isOpenAside, 'ps-3': !data.lists.isOpenAside}">Ваш
-                канал</p></RouterLink>
+              <RouterLink to="/">
+                <p class="font-medium text-xs pt-2 cursor-pointer" :class="{'text-xs': data.lists.isOpenAside, 'ps-3': !data.lists.isOpenAside}">Ваш канал</p>
+              </RouterLink>
             </li>
             <li>
-              <RouterLink to="/"><p class="font-medium text-xs pt-2 cursor-pointer"
-                                    :class="{'text-xs': data.lists.isOpenAside, 'ps-3': !data.lists.isOpenAside}">
-                Подписки</p></RouterLink>
+              <RouterLink to="/">
+                <p class="font-medium text-xs pt-2 cursor-pointer" :class="{'text-xs': data.lists.isOpenAside, 'ps-3': !data.lists.isOpenAside}">Подписки</p>
+              </RouterLink>
             </li>
           </ul>
         </div>
       </main>
+      <!--Основное тело-->
       <RouterView/>
     </div>
-
+<!--Модальное окно регистрации-->
     <transition
         enter-active-class="transition ease-out duration-300 transform"
         enter-from-class="opacity-0"
@@ -324,34 +427,20 @@ const changeFile = event => {
               <li class="flex flex-col gap-3 justify-center">
                 <Error :errors="data.forms.registration.errors.photo_file"/>
                 <label for="photo" class="cursor-pointer">
-                  <div class="relative flex flex-row items-end gap-4 justify-center"
-                       :class="{'hidden': !data.lists.isFileImage}">
-                    <img src="#" alt="large image"
-                         class="rounded-full aspect-square w-20 h-20 object-cover border border-gray-200 shadow-md hover:brightness-60"
-                         ref="largeImg"/>
-                    <img src="#" alt="medium image"
-                         class="rounded-full aspect-square w-15 h-15 object-cover border border-gray-200 shadow-md hover:brightness-60"
-                         ref="mediumImg"/>
-                    <img src="#" alt="small image"
-                         class="rounded-full aspect-square w-10 h-10 object-cover border border-gray-200 shadow-md hover:brightness-60"
-                         ref="smallImg"/>
+                  <div class="relative flex flex-row items-end gap-4 justify-center">
+                    <img :src="data.forms.registration.form.photo_file ? data.forms.registration.fileURL : '/src/assets/default.png'"
+                         alt="large image" class="rounded-full aspect-square w-20 h-20 object-cover border border-gray-200 shadow-md hover:brightness-80 bg-gray-300"/>
+                    <img :src="data.forms.registration.form.photo_file ? data.forms.registration.fileURL : '/src/assets/default.png'"
+                         alt="medium image" class="rounded-full aspect-square w-15 h-15 object-cover border border-gray-200 shadow-md hover:brightness-80 bg-gray-300"/>
+                    <img :src="data.forms.registration.form.photo_file ? data.forms.registration.fileURL : '/src/assets/default.png'"
+                         alt="small image" class="rounded-full aspect-square w-10 h-10 object-cover border border-gray-200 shadow-md hover:brightness-80 bg-gray-300"/>
                   </div>
-                  <div class="flex flex-row items-end gap-4 justify-center" :class="{'hidden': data.lists.isFileImage}">
-                    <FontAwesomeIcon class="py-1.5 col-span-1 text-7xl text-gray-300 hover:brightness-60"
-                                     :icon="faUserCircle"/>
-                    <FontAwesomeIcon class="py-1.5 col-span-1 text-5xl text-gray-300 hover:brightness-60"
-                                     :icon="faUserCircle"/>
-                    <FontAwesomeIcon class="py-1.5 col-span-1 text-3xl text-gray-300 hover:brightness-60"
-                                     :icon="faUserCircle"/>
-                  </div>
-                  <input type="file" id="photo" class="hidden" accept="image/*"
-                         @change="changeFile($event)"
-                         @input="uploadUserPhoto($event, $refs.largeImg, $refs.mediumImg, $refs.smallImg)">
-
-                  <p class="flex justify-center text-gray-700 mt-2" v-if="!data.forms.registration.form.photo_file">Файл не
+                  <input type="file" id="photo" class="hidden" accept="image/*" @change="changeFile">
+                  <p v-if="data.forms.registration.form.photo_file" class="flex justify-center text-gray-700 mt-2 w-50 line-clamp-1 break-words">
+                    {{ data.forms.registration.form.photo_file.name }}
+                  </p>
+                  <p v-else class="flex justify-center text-gray-700 mt-2">Файл не
                     выбран</p>
-                  <p v-else class=" justify-center text-gray-700 mt-2 w-50 line-clamp-1 break-words">
-                    {{ data.forms.registration.photo_file.name }}</p>
                 </label>
               </li>
               <li class="relative flex flex-col">
@@ -380,10 +469,15 @@ const changeFile = event => {
                 <Error :errors="data.forms.registration.errors.email"/>
               </li>
               <li class="sm:col-span-2 grid grid-cols-1 gap-2">
-                <button
-                    class="w-full bg-blue-500 rounded-xl p-1 text-white font-medium cursor-pointer hover:bg-blue-400">
-                  Зарегистрироваться
+                <button type="submit" :disabled="data.lists.isProcessing"
+                    class="relative w-full bg-blue-500 rounded-xl h-8 p-1 text-white font-medium cursor-pointer hover:bg-blue-400 flex justify-center">
+                  <span v-if="!data.lists.isProcessing">Зарегистрироваться</span>
+                  <svg v-else aria-hidden="true" class="w-5 h-5 text-gray-200 animate-spin dark:text-gray-600 fill-black absolute top-1.5" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
+                    <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
+                  </svg>
                 </button>
+
                 <button @click.prevent="data.modals.isRegistration = false; data.lists.isFileImage = false; data.forms.registration.form.photo_file = ''"
                         class="w-full bg-blue-500 rounded-xl p-1 text-white font-medium cursor-pointer hover:bg-blue-400">
                   Закрыть
@@ -395,6 +489,7 @@ const changeFile = event => {
       </template>
     </transition>
 
+<!--Модальное окно входа-->
     <transition
         enter-active-class="transition ease-out duration-300 transform"
         enter-from-class="opacity-0"
@@ -406,7 +501,7 @@ const changeFile = event => {
         <div class="fixed flex justify-center sm:items-center top-0 bottom-0 right-0 left-0 z-4">
           <div class="flex items-center justify-center fixed bg-black/30 top-0 right-0 left-0 bottom-0"
                @click="data.modals.isAuthorization = false;"/>
-          <form v-show="data.modals.isAuthorization" @submit.prevent="authForm(data.forms.authorization)"
+          <form v-show="data.modals.isAuthorization" @submit.prevent="authForm(data.forms.authorization.form)"
                 class="relative sm:rounded-xl bg-white w-full sm:w-auto h-full sm:h-fit overflow-auto">
             <div class="flex justify-between items-center border-b border-b-gray-200 p-3 text-lg font-semibold">
               <p class="">Вход</p>
@@ -431,11 +526,15 @@ const changeFile = event => {
                 <Error :errors="data.forms.authorization.errors.password"/>
               </li>
               <li class="grid gap-2">
-                <button
-                    class="w-full bg-blue-500 rounded-xl p-1 text-white font-medium cursor-pointer hover:bg-blue-400">
-                  Войти
+                <button :disabled="data.lists.isProcessing"
+                    class="relative w-full bg-blue-500 h-8 rounded-xl p-1 text-white font-medium cursor-pointer hover:bg-blue-400 flex justify-center">
+                  <span v-if="!data.lists.isProcessing">Войти</span>
+                  <svg v-else aria-hidden="true" class="w-5 h-5 text-gray-200 animate-spin dark:text-gray-600 fill-black absolute top-1.5" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
+                    <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
+                  </svg>
                 </button>
-                <button @click.prevent="data.modals.isAuthorization = false;"
+                <button @click.prevent="data.modals.isAuthorization = false"  :disabled="data.lists.isProcessing"
                         class="w-full bg-blue-500 rounded-xl p-1 text-white font-medium cursor-pointer hover:bg-blue-400">
                   Закрыть
                 </button>
@@ -446,9 +545,6 @@ const changeFile = event => {
       </template>
     </transition>
 
-    <div class="absolute bottom-5 right-5 bg-white shadow-xl border border-gray-300 rounded-xl p-2">
-      Ye ye done done
-    </div>
+    <Toast @update="updateToastStatus" v-if="data.forms.toast.active" :text="data.forms.toast.message" :icon="data.forms.toast.icon" :active="data.forms.toast.active" />
   </div>
-
 </template>

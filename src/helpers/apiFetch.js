@@ -25,9 +25,11 @@ export default async function(method, url, body = null) {
     const response = await fetch (`http://videoapi/api-video${url}`, options)
 
     console.log(response);
-    if (response.status === 401) {
+    if (response.status === 403) {
         localStorage.removeItem('user-token')
-        window.location.replace('/')
+        localStorage.removeItem('user-id')
+        localStorage.removeItem('user-role')
+        // window.location.replace('/')
     }
 
     try {

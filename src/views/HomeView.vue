@@ -166,26 +166,23 @@ const toggleMutedVideo = (video, videoElement) => {
               {{ video.time }}</p>
           </div>
         </div>
-        <div class="p-2 block grid grid-cols-5 gap-1">
+        <div class="p-2 grid grid-cols-8 gap-1">
             <RouterLink to="/">
-              <template v-if="video.user.photo_file === null">
-                <FontAwesomeIcon class="w-full py-1.5 col-span-1 text-4xl text-gray-300" :icon="faUserCircle"/>
-              </template>
-              <template v-else>
-                <img class="py-1.5 col-span-1 rounded-full aspect-square w-10 h-20" :src="`http://videoapi/${video.user.photo_file}`" alt="user">
-              </template>
+                <img class="col-span-1 rounded-full aspect-square"
+                     :src=" video.user.photo_file ? 'http://videoapi/'+video.user.photo_file : '/src/assets/default.png' " alt="user">
             </RouterLink>
-          <div class="col-span-3">
+          <div class="col-span-6">
             <RouterLink to="/">
-              <p class="text-xs sm:text-sm md:text-base font-semibold leading-none break-words line-clamp-2 ">{{ video.title }}</p>
+              <p class="text-xs sm:text-sm md:text-base font-semibold leading-none break-words line-clamp-2">{{ video.title }}</p>
             </RouterLink>
             <RouterLink to="/">
-              <p class="text-xs sm:text-sm line-clamp-1 mt-1 text-gray-600">{{ video.user.login }}</p>
+              <p class="text-xs line-clamp-1 mt-1 text-gray-600">{{ video.user.name }}</p>
             </RouterLink>
           </div>
-          <template v-if="true">
-            <FontAwesomeIcon class="col-span-1 mx-auto col-span-1 mt-1 text-sm" :icon="faEllipsisVertical" />
-          </template>
+<!--          Не авторизированные пользователи не видят-->
+          <div class="flex justify-end" v-if="true">
+            <FontAwesomeIcon class="block mr-2 mt-1 text-sm" :icon="faEllipsisVertical" />
+          </div>
         </div>
       </div>
     </div>

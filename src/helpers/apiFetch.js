@@ -29,7 +29,7 @@ export default async function(method, url, body = null) {
         localStorage.removeItem('user-token')
         localStorage.removeItem('user-id')
         localStorage.removeItem('user-role')
-        // window.location.replace('/')
+        window.location.replace('/')
     }
 
     try {

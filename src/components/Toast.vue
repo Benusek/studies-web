@@ -4,7 +4,6 @@ import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 import { ref } from 'vue'
 
 const progress = ref('0')
-const close = ref(false)
 
 const emit = defineEmits(['update'])
 defineProps({
@@ -17,11 +16,11 @@ let interval = setInterval(() => {
   if (progress.value) {
     clearInterval(interval)
   }
-}, 500)
+}, 900)
 
 setInterval(() => {
   emit('update')
-}, 2500)
+}, 2850)
 
 const onClick = () => {
   emit('update')
@@ -31,10 +30,12 @@ const onClick = () => {
 
 
 <template>
-  <div class="flex justify-center items-center absolute bottom-5 right-5 bg-white shadow-xl border border-gray-300 rounded-t-lg p-2 gap-2 text-green-600 cursor-pointer" @click="onClick">
+
+  <div class="flex justify-center items-center fixed bottom-5 right-5 bg-white shadow-xl border border-gray-300 rounded-md p-2 gap-2 text-green-600 cursor-pointer" @click="onClick">
     <FontAwesomeIcon :icon="icon" class="p-2" /> {{text}}
-    <div class="absolute transition-all bottom-0 left-0 bg-green-600 h-1 duration-1000 delay-1000 ease-linear" :class="`w-${progress}`"></div>
+    <div class="absolute rounded-bl-md transition-all bottom-0 duration-1000 ease-linear delay-1000 left-0 bg-green-600 h-1 " :class="`w-${progress}`"></div>
   </div>
+
 </template>
 
 <style scoped>

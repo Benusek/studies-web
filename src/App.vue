@@ -28,9 +28,25 @@ import apiFetch from "@/helpers/apiFetch.js";
 import Error from "@/components/Error.vue";
 import Toast from '@/components/Toast.vue'
 import router from '@/router/index.js'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 
 const allCategories = ref([])
+const categories = ref([])
+const icons = {
+  1: faWpforms,
+  2: faVuejs,
+  3: faN,
+  4: faNodeJs,
+  6: faReact,
+  7: faFlutter,
+  8: faGolang,
+  9: faUnity,
+  11: faJava,
+  10: faC,
+  12: faBook
+}
+
+
 const data = ref({
   lists: {
     isOpenList: false,
@@ -114,10 +130,6 @@ const updateValue = (storageId, newValue) => {
   }
 }
 
-provide('token', token)
-provide('user-role', roleId)
-provide('updateToken', updateToken)
-
 const logout = async() => {
   await apiFetch('GET', '/logout')
   updateToken(null)
@@ -137,21 +149,6 @@ onMounted(async () => {
   await getInfo()
 })
 
-const icons = {
-  1: faWpforms,
-  2: faVuejs,
-  3: faN,
-  4: faNodeJs,
-  6: faReact,
-  7: faFlutter,
-  8: faGolang,
-  9: faUnity,
-  11: faJava,
-  10: faC,
-  12: faBook
-}
-const categories = ref([])
-
 const getCategories = () => {
   categories.value = []
   allCategories.value.forEach((category) => {
@@ -161,9 +158,10 @@ const getCategories = () => {
   })
 }
 
-const sendSearch = async (expansion = false) => {
-  const result = await apiFetch('GET', `/video/start/0/count/30?query=${data.value.videoQuery}`)
-  console.log(result);
+const sendSearch = async () => {
+  if (data.value.videoQuery) {
+    router.replace(`/search/${data.value.videoQuery}`)
+  }
 }
 
 const registerForm = async (form) => {
@@ -285,6 +283,10 @@ const getRelativeTime = date => {
 }
 
 provide('getRelativeTime', getRelativeTime)
+provide('token', token)
+provide('user-role', roleId)
+provide('updateToken', updateToken)
+provide('allCategories', allCategories)
 
 </script>
 
@@ -293,17 +295,18 @@ provide('getRelativeTime', getRelativeTime)
   <div @click="closedOutside($event, $refs.userList, $refs.userButton)">
     <div v-if="data.lists.isOpenList" class="flex items-center justify-center fixed bg-black/30 top-0 right-0 left-0 bottom-0 z-3 sm:hidden"
          @click="data.modals.isRegistration = false; data.lists.isFileImage = false; data.forms.registration.form.photo_file = ''"/>
-
     <div class="min-w-min">
       <header class="sticky top-0 z-3">
         <nav class="bg-gray-100">
           <ul class="flex justify-between items-center gap-3 border-b border-gray-200 p-2 w-full">
-            <RouterLink to="/" class="flex sm:flex flex-row items-center gap-2"
+            <li class="flex sm:flex flex-row items-center gap-2 cursor-pointer"
                         :class="{'hidden': data.lists.searchExpansion}">
               <FontAwesomeIcon :icon="faBars" class="text text-xl p-2" @click="toggleAside"/>
-              <img src="/src/assets/logo.svg" alt="logo" class="w-10">
-              <p class="">Studies</p>
-            </RouterLink>
+              <RouterLink to="/" class="flex flex-row items-center gap-2 cursor-pointer">
+                <img src="/src/assets/logo.svg" alt="logo" class="w-10">
+                <p class="">Studies</p>
+              </RouterLink>
+            </li>
             <li class="flex sm:w-120" :class="{'w-full': data.lists.searchExpansion}">
               <button @click="data.lists.searchExpansion = false"
                       :class="{'flex': data.lists.searchExpansion, 'hidden': !data.lists.searchExpansion}"
@@ -398,7 +401,7 @@ provide('getRelativeTime', getRelativeTime)
       <!--Тело страницы-->
       <div class="flex flex-col sm:flex-row">
         <!--Левая панель-->
-        <aside class="z-2 bg-gray-50/45 z-2 min-w-20 break-words">
+        <aside class="z-2 bg-gray-50/45 z-2 min-w-20 break-words transition-all duration-500">
           <div class="sticky justify-center top-16 h-[calc(100vh-4rem)] overflow-auto sm:flex w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                :class="{'sm:w-20': data.lists.isOpenAside, 'hidden': data.lists.isOpenAside}">
             <ul>
@@ -417,7 +420,7 @@ provide('getRelativeTime', getRelativeTime)
                        class="transition-all duration-100 hover:bg-gray-100 active:bg-gray-200
                  border-b border-gray-500/10 font-sans cursor-pointer"
                        :class="!data.lists.isOpenAside ? 'shadow-xs' : 'shadow-sm rounded-sm w-15'">
-                    <RouterLink :to="`/${category.id}`" class="flex gap-3 min-w-10 text-xs p-2">
+                    <RouterLink :to="`/category/${category.id}`" class="flex gap-3 min-w-10 text-xs p-2">
                         <FontAwesomeIcon :icon="icons[`${category.id}`]" class="text-lg ms-3"/>
                         <span v-if="!data.lists.isOpenAside">{{ category.name }}</span>
                     </RouterLink>

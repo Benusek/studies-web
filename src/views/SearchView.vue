@@ -3,7 +3,7 @@
 </script>
 
 <template>
-Категория
+
 </template>
 
 <style scoped>

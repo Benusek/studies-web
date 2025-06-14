@@ -28,6 +28,7 @@ import apiFetch from "@/helpers/apiFetch.js";
 import Error from "@/components/Error.vue";
 import Toast from '@/components/Toast.vue'
 import router from '@/router/index.js'
+import { useRoute, useRouter } from 'vue-router'
 
 const allCategories = ref([])
 const data = ref({
@@ -252,6 +253,38 @@ const closedOutside = (event, menu, btn) => {
   }
 }
 
+const getRelativeTime = date => {
+  let time = new Intl.RelativeTimeFormat(
+    'ru', {style: "long",numeric: "auto"}
+  )
+
+  const milliseconds  =  new Date(date) - new Date()
+  const seconds = Math.abs(Math.floor(milliseconds / 1000))
+  const minutes = Math.abs(Math.floor(seconds / 60))
+  const hours = Math.abs(Math.floor(minutes / 60))
+  const days = Math.abs(Math.floor(hours / 24))
+  const week = Math.abs(Math.floor(days / 24))
+  const months = Math.abs(Math.floor(days / 30))
+  const years = Math.abs(Math.floor(months / 12))
+
+  const times = {
+    years: years,
+    months: months,
+    week: week,
+    days: days,
+    hours: hours,
+    minutes: minutes,
+    seconds: seconds,
+  }
+
+  for(const key in times) {
+    if (times[key] >= 1) {
+      return time.format(times[key] * -1, key)
+    }
+  }
+}
+
+provide('getRelativeTime', getRelativeTime)
 
 </script>
 
@@ -314,11 +347,11 @@ const closedOutside = (event, menu, btn) => {
               </div>
             </div>
           </li>
-          <li v-if="!token" class="p-3 border-b border-gray-300 hover:bg-gray-200" @click="data.modals.isRegistration = true">
+          <li v-if="!token" class="p-3 border-b border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300" @click="data.modals.isRegistration = true">
             Зарегистрироваться
           </li>
-          <li v-if="!token" class="p-3 border-b rounded-b-xl sm:rounded-br-none sm:rounded-bl-xl border-gray-300 hover:bg-gray-200" @click="data.modals.isAuthorization = true"> Войти</li>
-          <li v-if="token" class="border-b border-gray-300 hover:bg-gray-200">
+          <li v-if="!token" class="p-3 border-b rounded-b-xl sm:rounded-br-none sm:rounded-bl-xl border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300" @click="data.modals.isAuthorization = true"> Войти</li>
+          <li v-if="token" class="border-b border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300">
             <RouterLink to="/settings">
               <div class="p-3">
                 <FontAwesomeIcon class="flex items-center mr-3" :icon="faGear"/>
@@ -326,7 +359,7 @@ const closedOutside = (event, menu, btn) => {
               </div>
             </RouterLink>
           </li>
-          <li v-if="token && parseInt(roleId) === 2" class="p-3 border-b border-gray-300 hover:bg-gray-200">
+          <li v-if="token && parseInt(roleId) === 2" class="p-3 border-b border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300">
             <RouterLink to="/reports">
               <div class="p-3">
                 <FontAwesomeIcon class="p-x mr-3" :icon="faHeadset"/>
@@ -334,11 +367,11 @@ const closedOutside = (event, menu, btn) => {
               </div>
             </RouterLink>>
           </li>
-          <li v-if="token && parseInt(roleId) === 1" class="p-3 border-b border-gray-300 hover:bg-gray-200">
+          <li v-if="token && parseInt(roleId) === 1" class="p-3 border-b border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300">
             <FontAwesomeIcon class="flex items-center mr-3" :icon="faPlus"/>
             <span>Добавить видео</span>
           </li>
-          <li v-if="token && parseInt(roleId) === 1" class="border-b border-gray-300 hover:bg-gray-200">
+          <li v-if="token && parseInt(roleId) === 1" class="border-b border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300">
             <RouterLink to="/playlists">
               <div class="p-3">
                 <FontAwesomeIcon class="flex items-center mr-3" :icon="faList"/>
@@ -346,7 +379,7 @@ const closedOutside = (event, menu, btn) => {
               </div>
             </RouterLink>
           </li>
-          <li v-if="token && parseInt(roleId) === 1" class="border-b border-gray-300 hover:bg-gray-200">
+          <li v-if="token && parseInt(roleId) === 1" class="border-b border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300">
             <RouterLink to="/my-reports">
               <div class="p-3">
                 <FontAwesomeIcon class="flex items-center mr-3" :icon="faFlag"/>
@@ -354,7 +387,8 @@ const closedOutside = (event, menu, btn) => {
               </div>
             </RouterLink>
           </li>
-          <li v-if="token" class="p-3 hover:bg-gray-200 rounded-b-xl sm:rounded-bl-xl sm:rounded-br-none border-b border-gray-300 hover:bg-gray-200" @click="logout">
+          <li v-if="token" class="p-3 hover:bg-gray-200 rounded-b-xl sm:rounded-bl-xl sm:rounded-br-none border-b border-gray-300 hover:bg-gray-200 transition-all duration-100
+            active:bg-gray-300" @click="logout">
             <FontAwesomeIcon class="flex items-center mr-3" :icon="faArrowRightFromBracket"/>
             <span class="col-span-2">Выйти</span>
           </li>
@@ -380,12 +414,12 @@ const closedOutside = (event, menu, btn) => {
                 </div>
                 <div :class="{'flex flex-col gap-2' : data.lists.isOpenAside}">
                   <div v-for="category in categories"
-                       class="p-2 min-w-10 hover:bg-gray-100
-                 border-b border-gray-500/10 text-xs font-sans cursor-pointer"
+                       class="transition-all duration-100 hover:bg-gray-100 active:bg-gray-200
+                 border-b border-gray-500/10 font-sans cursor-pointer"
                        :class="!data.lists.isOpenAside ? 'shadow-xs' : 'shadow-sm rounded-sm w-15'">
-                    <RouterLink :to="'/category/' + category.id" class="flex gap-3">
-                      <FontAwesomeIcon :icon="icons[`${category.id}`]" class="text-lg ms-3"/>
-                      <span v-if="!data.lists.isOpenAside">{{ category.name }}</span>
+                    <RouterLink :to="`/${category.id}`" class="flex gap-3 min-w-10 text-xs p-2">
+                        <FontAwesomeIcon :icon="icons[`${category.id}`]" class="text-lg ms-3"/>
+                        <span v-if="!data.lists.isOpenAside">{{ category.name }}</span>
                     </RouterLink>
                   </div>
                 </div>
@@ -394,7 +428,7 @@ const closedOutside = (event, menu, btn) => {
                 <RouterLink to="/" class="cursor-pointer" :class="{'flex justify-center': data.lists.isOpenAside}">
                   <p class="font-medium text-sm pt-4 pb-3" :class="!data.lists.isOpenAside ? 'ps-4' : 'text-xs'">Ваш канал</p>
                 </RouterLink>
-                <RouterLink to="/playlists" class="flex items-center p-2 cursor-pointer hover:bg-gray-100 gap-3" :class="!data.lists.isOpenAside ? 'shadow-xs' : 'rounded-sm shadow-sm'">
+                <RouterLink to="/playlists" class="flex items-center p-2 cursor-pointer hover:bg-gray-100 gap-3 transition-all duration-100 active:bg-gray-200" :class="!data.lists.isOpenAside ? 'shadow-xs' : 'rounded-sm shadow-sm'">
                   <FontAwesomeIcon :icon="faList" class="ms-3"/>
                   <p v-if="!data.lists.isOpenAside" class="text-xs">Плейлисты</p>
                 </RouterLink>
@@ -404,19 +438,20 @@ const closedOutside = (event, menu, btn) => {
                   <p class="font-medium text-sm pt-4 pb-3" :class="data.lists.isOpenAside ? 'text-xs' : 'ps-4'">Подписки</p>
                 </RouterLink>
                 <div v-for="sub in data.user.subscribe.slice(0, data.lists.isSubscribes)">
-                  <RouterLink :to="'/channel/' + sub.id" class="flex flex-row text-xs items-center break-words overflow-hidden line-clamp-1 sm:w-full hover:bg-gray-100">
+                  <RouterLink :to="'/channel/' + sub.id" class="flex flex-row text-xs items-center break-words overflow-hidden line-clamp-1 sm:w-full hover:bg-gray-100
+                    transition-all duration-100 active:bg-gray-200">
                       <img :src="sub.photo_file ? 'http://videoapi/' + sub.photo_file : '/src/assets/default.png'" alt=""
                            class="ms-2 rounded-full aspect-square w-10 text-lg p-2">
                     <span class="w-20 break-words line-clamp-1 hover:bg-" v-if="!data.lists.isOpenAside">{{sub.name}}</span>
                   </RouterLink>
                 </div>
                 <div v-if="data.lists.isSubscribes === 3 && data.user.subscribe.length > 3" :class="!data.lists.isOpenAside ? 'shadow-xs' : 'shadow-sm rounded-sm mt-2'" class="flex flex-row p-2 border-b border-gray-200/80 hover:bg-gray-100
-                 text-xs font-sans cursor-pointer gap-3"  @click="data.lists.isSubscribes = data.user.subscribe.length">
+                 text-xs font-sans cursor-pointer gap-3 transition-all duration-100 active:bg-gray-200"  @click="data.lists.isSubscribes = data.user.subscribe.length">
                     <FontAwesomeIcon :icon="faArrowDown" class="text-md ms-4"/>
                     <span v-if="!data.lists.isOpenAside">Развернуть</span>
                 </div>
                 <div v-else-if="data.lists.isSubscribes !== 3 && data.user.subscribe.length > 3" :class="!data.lists.isOpenAside ? 'shadow-xs' : 'shadow-sm rounded-sm mt-2'" class="flex flex-row p-2 border-b border-gray-200/80 hover:bg-gray-100
-                 text-xs font-sans cursor-pointer gap-3 items-center" @click="data.lists.isSubscribes = 3">
+                 text-xs font-sans cursor-pointer gap-3 items-center transition-all duration-100 active:bg-gray-200" @click="data.lists.isSubscribes = 3">
                     <FontAwesomeIcon :icon="faArrowUp" class="text-md ms-4"/>
                     <span v-if="!data.lists.isOpenAside">Свернуть</span>
                 </div>
@@ -426,12 +461,12 @@ const closedOutside = (event, menu, btn) => {
                   <p class="font-medium text-sm pt-4 pb-3" :class="{'text-xs': data.lists.isOpenAside, 'ps-4': !data.lists.isOpenAside}">Прочее</p>
                 </div>
                 <div :class="{'flex flex-col gap-2' : data.lists.isOpenAside}">
-                  <RouterLink to="/settings/" class="flex items-center p-2 cursor-pointer border-b border-gray-500/10 hover:bg-gray-100 gap-3"
+                  <RouterLink to="/settings/" class="flex items-center p-2 cursor-pointer border-b border-gray-500/10 hover:bg-gray-100 gap-3 transition-all duration-100 active:bg-gray-200"
                               :class="!data.lists.isOpenAside ? 'shadow-xs' : 'shadow-sm rounded-sm'">
                     <FontAwesomeIcon :icon="faGear" class="ms-3"/>
                     <p v-if="!data.lists.isOpenAside" class="text-xs">Настройки</p>
                   </RouterLink>
-                  <RouterLink :to="'/my-reports/'" class="flex items-center p-2 cursor-pointer border-b border-gray-500/10 hover:bg-gray-100 gap-3"
+                  <RouterLink :to="'/my-reports/'" class="flex items-center p-2 cursor-pointer border-b border-gray-500/10 hover:bg-gray-100 gap-3 transition-all duration-100 active:bg-gray-200"
                               :class="!data.lists.isOpenAside ? 'shadow-xs' : 'shadow-sm rounded-sm'">
                     <FontAwesomeIcon :icon="faFlag" class="ms-3"/>
                     <p v-if="!data.lists.isOpenAside" class="text-xs">Жалобы</p>
@@ -443,7 +478,7 @@ const closedOutside = (event, menu, btn) => {
           </div>
         </aside>
         <!--Основное тело-->
-        <RouterView/>
+        <RouterView :key="useRoute().fullPath" />
       </div>
       <!--Модальное окно регистрации-->
       <transition
@@ -558,7 +593,6 @@ const closedOutside = (event, menu, btn) => {
           </div>
         </template>
       </transition>
-
       <!--Модальное окно входа-->
       <transition
         enter-active-class="transition ease-out duration-300 transform"

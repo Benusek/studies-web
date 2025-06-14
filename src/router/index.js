@@ -1,12 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import ChannelView from '@/views/ChannelView.vue'
-import CategoryView from '@/views/CategoryView.vue'
 import MyReportsView from '@/views/MyReportsView.vue'
 import PlaylistsView from '@/views/PlaylistsView.vue'
 import SettingsView from '@/views/SettingsView.vue'
 import SubscribersView from '@/views/SubscribersView.vue'
 import ReportsView from '@/views/ReportsView.vue'
+import SearchView from '@/views/SearchView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -17,14 +17,19 @@ const router = createRouter({
       component: HomeView,
     },
     {
+      path: '/:category',
+      name: 'category',
+      component: HomeView,
+    },
+    {
+      path: '/search/:query',
+      name: 'search',
+      component: SearchView,
+    },
+    {
       path: '/channel/:id',
       name: 'channel',
       component: ChannelView,
-    },
-    {
-      path: '/category/:id',
-      name: 'category',
-      component: CategoryView,
     },
     {
       path: '/subscribers',

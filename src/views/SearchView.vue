@@ -43,8 +43,10 @@ const data = ref({
     isEmpty: false,
     isFilter: false
   },
-  query: route.params.query,
   videos: [],
+  playlists: [],
+  count_videos: '',
+  count_playlists: '',
   filter: {
     allCategories: [],
     categories: [],
@@ -52,14 +54,14 @@ const data = ref({
     tagQuery: '',
     allTags: [],
     tags: []
-  }
+  },
+  form: {
+    query: route.params.query,
+    categories: [],
+    tags: [],
+    type: 'all'
+  },
 })
-
-if (!data.value.query) {
-  data.value.query = ''
-} else {
-  data.value.query = '?query=' + data.value.query
-}
 
 onMounted(async () => {
   const tags = await apiFetch('GET', '/tag')
@@ -80,12 +82,13 @@ onMounted(async () => {
     })
   }
 
-  const result = await apiFetch('GET', `/video/start/0/count/20${data.value.query}`)
-  if (result.videos) {
-    if (result.videos.length < 20) {
+  const result = await apiFetch('POST', `/video/search/start/${data.value.videos.length}/count/30`, data.value.form)
+  console.log(result)
+  if (result.data.videos) {
+    if (result.data.videos.length < 30) {
       data.value.status.isUploading = false
     }
-    result.videos.forEach(v => {
+    result.data.videos.forEach(v => {
       v.isHover = false
       v.isMuted = true
       v.isPlaying = false
@@ -98,7 +101,7 @@ onMounted(async () => {
     data.value.status.isResponse = true
   }
 
-  if (result.data) {
+  if (result.data.count_videos === 0 && result.data.count_videos === 0 || result.data.length === 0) {
     data.value.status.isEmpty = true
     data.value.status.isUploading = false
   }
@@ -114,7 +117,7 @@ window.addEventListener('scroll', async () => {
   }
   if (window.innerHeight + window.pageYOffset >= document.documentElement.scrollHeight && data.value.status.isUploading) {
     data.value.status.isProcessing = true
-    const result = await apiFetch('GET', `/video/start/${data.value.videos.length}/count/20${data.value.query}`)
+    const result = await apiFetch('GET', `/video/start/${data.value.videos.length}/count/20${data.value.form.query}`)
 
     if (result.data) {
       data.value.status.isUploading = false
@@ -141,6 +144,10 @@ const toggle = (value) => {
   return !value
 }
 
+const writeForm = (value, massive, id) => {
+  value ? massive.push(id) : massive.splice(massive.indexOf(id), 1)
+}
+
 const resetFilter = (radio) => {
   data.value.filter.tags.forEach((tag) => {
     tag.isChecked = false
@@ -152,18 +159,23 @@ const resetFilter = (radio) => {
 
   radio.checked = true
 }
+
+const submitFilter = async() => {
+  const result = await apiFetch('POST', `video/search/start/${data.value.videos.length}/count/30`, data.value.form)
+  if (result) {
+    console.log(result)
+  }
+}
+
 </script>
 
 <template>
   <div class="p-3 w-full">
-<!--    {{data.filter.allTags}}-->
-<!--    {{data.filter.tags}}-->
     <div class="flex gap-2 select-none cursor-pointer mb-1 p-2 active:bg-gray-200 rounded-lg" @click="data.status.isFilter = toggle(data.status.isFilter)">
       <FontAwesomeIcon :icon="faSliders"/>
       <span class="font-medium text-xs">Фильтр</span>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
-
         <transition
           enter-active-class="transition-all ease-linear duration-100 transform"
           enter-from-class="h-0"
@@ -179,7 +191,8 @@ const resetFilter = (radio) => {
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 [&>*:nth-child(3n+2)]:md:border-x
             [&>*:nth-child(2n+1)]:sm:border-r [&>*:nth-child(2n+1)]:sm:border-gray-300 [&>*:nth-child(3n+2)]:border-gray-300 [&>*:nth-child(2n+1)]:md:border-r-0 ">
               <label :for="`category${category.id}`" v-for="category in data.filter.categories" class="flex gap-2 sm:justify-between items-center cursor-pointer hover:bg-gray-100
-              active:bg-gray-200 p-2 select-none"  :class="{'bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700': category.isChecked}" @click="category.isChecked = toggle(category.isChecked)">
+              active:bg-gray-200 p-2 select-none"  :class="{'bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700': category.isChecked}"
+                     @click="category.isChecked = toggle(category.isChecked); writeForm(category.isChecked, data.form.categories, category.id)">
                 <FontAwesomeIcon :icon="icons[`${category.id}`]"/>
                 <span class="text-xs break-words line-clamp-1">{{category.name}}</span>
               </label>
@@ -191,7 +204,7 @@ const resetFilter = (radio) => {
                    @input="data.filter.tags = []; getFiltered(data.filter.allTags, data.filter.tags, data.filter.tagQuery)">
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 [&>*:nth-child(3n+2)]:md:border-x  [&>*:nth-child(3n+2)]:border-gray-300 w-fit gap-2  select-none">
               <label :for="`tag${tag.id}`" v-for="tag in data.filter.tags" class="relative flex gap-2 justify-between items-center cursor-pointer bg-blue-500 rounded-lg
-              font-medium text-white hover:bg-blue-600 active:bg-blue-700 p-1.5" :class="{'bg-indigo-500 hover:bg-indigo-600': tag.isChecked}" @click="sortTags(tag)">
+              font-medium text-white hover:bg-blue-600 active:bg-blue-700 p-1.5" :class="{'bg-indigo-500 hover:bg-indigo-600': tag.isChecked}" @click="sortTags(tag); writeForm(tag.isChecked, data.form.tags, tag.id)">
                 <span class="text-[10px] break-words line-clamp-1 px-2">{{tag.name}}</span>
                 <span class="invisible text-xs" :class="{'visible': tag.isChecked}">
                   <FontAwesomeIcon :icon="faXmark" />
@@ -201,15 +214,15 @@ const resetFilter = (radio) => {
           </li>
           <li class="flex flex-col p-4 items-start gap-2 font-medium text-gray-500 lg:border-l lg:border-gray-200/80 select-none border-t border-gray-200/80 sm:border-t-0">
             <span class="font-medium text-sm mb-0 text-gray-600">Тип</span>
-              <label for="all" class="flex gap-2 text-xs cursor-pointer">
+              <label for="all" class="flex gap-2 text-xs cursor-pointer" @click="data.form.type = 'all'">
                 <input type="radio" checked ref="all" name="type" id="all" class="checked:accent-indigo-500 peer cursor-pointer">
                 <span class="peer-checked:text-indigo-500">Все</span>
               </label>
-            <label for="video" class="flex gap-2 text-xs cursor-pointer">
+            <label for="video" class="flex gap-2 text-xs cursor-pointer" @click="data.form.type = 'video'">
               <input type="radio" name="type" id="video" class="checked:accent-indigo-500 peer cursor-pointer">
               <span class="peer-checked:text-indigo-500">Видео</span>
             </label>
-            <label for="playlist" class="flex gap-2 text-xs cursor-pointer">
+            <label for="playlist" class="flex gap-2 text-xs cursor-pointer" @click="data.form.type = 'playlist'">
               <input type="radio" name="type" id="playlist" class="checked:accent-indigo-500 peer cursor-pointer">
               <span class="peer-checked:text-indigo-500">Плейлист</span>
             </label>

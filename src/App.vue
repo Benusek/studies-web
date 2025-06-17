@@ -281,6 +281,7 @@ const getRelativeTime = date => {
 }
 
 provide('getRelativeTime', getRelativeTime)
+provide('user-id', id)
 provide('token', token)
 provide('user-role', roleId)
 provide('updateToken', updateToken)
@@ -411,15 +412,17 @@ provide('getFiltered', getFiltered)
 
       <!--Тело страницы-->
       <div class="flex flex-col sm:flex-row">
+
         <!--Левая панель-->
-        <aside class="z-2 bg-gray-50/45 z-2 min-w-20 break-words transition-all duration-500">
+        <aside class="z-2 bg-gray-50/45 z-2 min-w-20 break-words transition-all">
           <div
-            class="sticky justify-center top-16 h-[calc(100vh-4rem)] overflow-auto sm:flex w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            class="sticky justify-center top-16 sm:h-[calc(100vh-4rem)] overflow-auto sm:flex w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]
+            transition-all duration-200"
             :class="{'sm:w-20': data.lists.isOpenAside, 'hidden': data.lists.isOpenAside}">
             <ul>
               <li>
                 <RouterLink to="/" :class="{'flex justify-center': data.lists.isOpenAside}">
-                  <p class="font-medium text-sm py-2 cursor-pointer"
+                  <p class="font-medium text-sm py-2 cursor-pointer transition-all duration-200"
                      :class="!data.lists.isOpenAside ? 'ps-4' : 'text-xs'">
                     Категории
                   </p>

@@ -30,7 +30,7 @@ defineEmits(['mouseleaveVideo', 'playVideo', 'timeupdateVideo', 'loadVideo', 'ch
 
 <template>
   <div v-if="!isResponse" class="rounded-lg shadow-sm min-w-25 cursor-pointer animate-pulse" v-for="i in 30">
-    <div class="bg-contain rounded-t-lg bg-top w-full bg-top bg-gray-300 bg-no-repeat h-0 relative"
+    <div class="bg-contain rounded-t-lg w-full bg-gray-300 bg-no-repeat h-0 relative"
          style="padding-top:56.25%;"></div>
     <div class="p-2 grid grid-cols-6 gap-1">
       <div class="flex justify-center py-1.5">
@@ -44,11 +44,11 @@ defineEmits(['mouseleaveVideo', 'playVideo', 'timeupdateVideo', 'loadVideo', 'ch
     </div>
   </div>
   <div v-else class="rounded-lg shadow-sm min-w-25 cursor-pointer" v-for="(video, index) in videos"
-       :class="{'transition-all duration-150 active:bg-gray-200 active:scale-95': data.status.isClickVideo}">
+       :class="{'transition-all duration-150 active:bg-gray-100 active:scale-95': data.status.isClickVideo}">
     <div @mouseleave="$emit('mouseleaveVideo', video, $refs.videoElement[index])"
          @mouseenter="$emit('playVideo', video, $refs.videoElement[index])"
-         class="bg-contain rounded-t-lg bg-top
-           w-full bg-top bg-black bg-no-repeat h-0 relative" style="padding-top:56.25%;"
+         class="bg-contain rounded-t-lg
+           w-full bg-black bg-no-repeat h-0 relative" style="padding-top:56.25%;"
          :style="{'background-image': `url('http://videoapi/${video.photo_file}')`}">
       <canvas ref="canvas" :class="{'hidden': video.photo_file !== null}"
               class="h-full mx-auto left-0 right-0 top-0 absolute"></canvas>

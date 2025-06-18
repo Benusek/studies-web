@@ -87,11 +87,13 @@ const data = ref({
     }
   },
   user: {
+    id: '',
     name: '',
     surname: '',
     patronymic: '',
-    login: '',
     email: '',
+    email_verify: '',
+    login: '',
     photo_file: '',
     subscribers_count: '',
     subscribers: [],
@@ -100,6 +102,7 @@ const data = ref({
   videoQuery: '',
   categoryQuery: ''
 })
+
 
 const id = ref(localStorage.getItem('user-id'))
 const token = ref(localStorage.getItem('user-token'))
@@ -147,6 +150,21 @@ onMounted(async () => {
   }
   await getInfo()
 })
+
+const getInfo = async() => {
+  if (localStorage.getItem('user-id')) {
+    const result = await apiFetch('GET', `/user/${localStorage.getItem('user-id')}`)
+    if (result) {
+      console.log(1)
+      if (result.data) {
+        console.log(2)
+        data.value.user = result.data
+        console.log(data.value.user)
+        console.log(3)
+      }
+    }
+  }
+}
 
 const getFiltered = (allMassive, massive, query) => {
   allMassive.forEach((object) => {
@@ -220,17 +238,8 @@ const showToast = (message, icon) => {
   data.value.forms.toast.icon = icon
 }
 
-const getInfo = async () => {
-  if (localStorage.getItem('user-id')) {
-    const information = await apiFetch('GET', `/user/${localStorage.getItem('user-id')}`)
-    if (information?.data) {
-      data.value.user = information.data
-      console.log(data.value.user)
-    }
-  }
-}
-
 const toggleUser = () => {
+  console.log(data.value.lists.isOpenList)
   data.value.lists.isOpenList === true ? data.value.lists.isOpenList = false : data.value.lists.isOpenList = true
 }
 
@@ -290,7 +299,6 @@ provide('getFiltered', getFiltered)
 </script>
 
 <template>
-
   <div @click="closedOutside($event, $refs.userList, $refs.userButton)">
     <div v-if="data.lists.isOpenList"
          class="flex items-center justify-center fixed bg-black/30 top-0 right-0 left-0 bottom-0 z-3 sm:hidden"
@@ -521,7 +529,7 @@ provide('getFiltered', getFiltered)
         leave-active-class="ease-in duration-200"
         leave-from-class="opacity-100"
         leave-to-class="opacity-0">
-        <template v-if="data.modals.isRegistration">
+        <template v-if="data.modals.isRegistration && !token">
           <div class="fixed flex justify-center sm:items-center top-0 bottom-0 right-0 left-0 z-4">
             <div class="flex items-center justify-center fixed bg-black/30 top-0 right-0 left-0 bottom-0"
                  @click="data.modals.isRegistration = false; data.lists.isFileImage = false; data.forms.registration.form.photo_file = ''" />
@@ -649,7 +657,7 @@ provide('getFiltered', getFiltered)
         leave-active-class="ease-in duration-200"
         leave-from-class="opacity-100"
         leave-to-class="opacity-0">
-        <template v-if="data.modals.isAuthorization">
+        <template v-if="data.modals.isAuthorization && !token">
           <div class="fixed flex justify-center sm:items-center top-0 bottom-0 right-0 left-0 z-4">
             <div class="flex items-center justify-center fixed bg-black/30 top-0 right-0 left-0 bottom-0"
                  @click="data.modals.isAuthorization = false;" />

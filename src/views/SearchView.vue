@@ -103,16 +103,6 @@ onMounted(async () => {
   }
 
   requestPage(result)
-
-  if (result.videos) {
-    fillVideos(result.videos)
-    data.value.status.isEmpty = false
-  }
-
-  if (result.data?.count_videos === 0 && result.data?.count_playlists === 0 || result.data.length === 0) {
-    data.value.status.isEmpty = true
-    data.value.status.isUploading = false
-  }
 })
 
 const sortTags = (tag) => {
@@ -145,8 +135,8 @@ const resetFilter = (radio) => {
 }
 
 const submitFilter = async () => {
-  data.value.videos = []
-  data.value.playlists = []
+  data.value.response.videos = []
+  data.value.response.playlists = []
   const result = await apiFetch('POST', `/video/search/start/0/count/5`, data.value.form)
   requestPage(result)
 }
@@ -177,7 +167,7 @@ const changePosition = async (pos) => {
 }
 
 const requestPage = (result) => {
-
+  data.value.status.isEmpty = false
   if (result.data) {
     if (result.data.videos) {
       fillVideos(result.data.videos)
@@ -188,6 +178,10 @@ const requestPage = (result) => {
         playlist.isClicked = false
         data.value.response.playlists.push(playlist)
       })
+    }
+
+    if (result.data.length === 0) {
+      data.value.status.isEmpty = true
     }
 
     if (result.data.count_playlists) {
@@ -201,8 +195,26 @@ const requestPage = (result) => {
     }
 
     if (data.value.objects_count !== 0) {
-      data.value.objects_count = Math.floor(data.value.objects_count / 5)
+      (data.value.objects_count / 5) % 1 !== 0 ? data.value.objects_count = Math.floor(data.value.objects_count / 5) + 1 :  data.value.objects_count = Math.floor(data.value.objects_count / 5)
     }
+
+    if (result.data.count_videos === 0 && result.data.count_playlists === 0 || result.data.length === 0) {
+      data.value.status.isEmpty = true
+      data.value.status.isUploading = false
+    }
+  }
+
+  if (result.playlists) {
+    result.playlists.forEach((playlist) => {
+      playlist.isHover = false
+      playlist.isClicked = false
+      data.value.response.playlists.push(playlist)
+    })
+  }
+
+  if (result.videos) {
+    fillVideos(result.videos)
+    data.value.status.isEmpty = false
   }
 }
 
@@ -310,7 +322,7 @@ const inputPage = () => {
       <VideoGridView :videos="data.response.videos" :isEmpty="data.status.isEmpty" :isResponse="data.status.isResponse"
                      :isProcessing="data.status.isProcessing"
                      :text="'К сожалению, на ваш поисковый запрос ничего не найдено'" />
-      <div v-if="!data.status.isEmpty && data.objects_count"
+      <div v-if="!data.status.isEmpty && data.objects_count && data.objects_count.length > 1">
            class="relative col-span-full flex items-end justify-center items-center gap-1">
         <div v-if="data.status.isPagination"
              class="absolute top-[-45px] bg-white border-2 border-gray-200  rounded-sm flex flex-row px-1 py-1 gap-2">
@@ -339,16 +351,16 @@ const inputPage = () => {
              class="border-2 border-gray-200 px-2 py-0.5 rounded-sm select-none cursor-pointer active:bg-gray-100/60 hover:bg-gray-100/30 text-gray-500">
           1
         </div>
-        <div v-if="data.current_page === data.objects_count || data.current_page === data.objects_count - 1"
+        <div v-if="data.current_page === data.objects_count  && data.objects_count > 3 || data.current_page === data.objects_count - 1 && data.objects_count > 3"
              @click="data.status.isPagination ? data.status.isPagination = false : data.status.isPagination = true"
              class="border-2 border-gray-200 px-2 py-0.5 rounded-sm select-none cursor-pointer active:bg-gray-100/60 hover:bg-gray-100/30 text-gray-500">
           ...
         </div>
-        <div v-if="data.objects_count > 3"
+        <div
              class="border-2 border-gray-200 px-2 py-0.5 rounded-sm select-none cursor-pointer bg-blue-500 text-white active:bg-blue-700 hover:bg-blue-600"
              @click="changePosition(data.current_page)">{{ data.current_page }}
         </div>
-        <div v-if="data.current_page !== data.objects_count && data.current_page !== data.objects_count - 1"
+        <div v-if="data.current_page !== data.objects_count && data.current_page !== data.objects_count - 1 && data.objects_count > 3"
              @click="data.status.isPagination ? data.status.isPagination = false : data.status.isPagination = true"
              class="border-2 border-gray-200 px-2 py-0.5 rounded-sm select-none cursor-pointer active:bg-gray-100/60 hover:bg-gray-100/30 text-gray-500">
           ...

@@ -40,13 +40,13 @@ function captureFrameAtTime(timeInSeconds, videoElement, videoCanvas) {
            style="padding-top:56.25%;"
            :style="{'background-image':
            `url('${ playlist.videos ? 'http://videoapi/' + playlist.videos[0].photo_file : '/src/assets/playlist-default.png' }')`}">
-        <video ref="PlaylistElement" v-if="playlist.videos"
+        <video ref="PlaylistElement"
                @loadeddata="captureFrameAtTime(5, $refs.PlaylistElement[index], $refs.canvas[index])"
                class="absolute top-0 rounded-t-lg h-full hidden bg-contain bg-black w-full">
           <source :src="playlist.videos ? 'http://videoapi/' + playlist.videos[0].video_file : ''" type="video/mp4" />
         </video>
         <canvas ref="canvas" :class="!playlist.videos ? 'hidden' : null"
-                class="h-full mx-auto left-0 right-0 top-0 absolute"></canvas>
+                class="h-full mx-auto left-0 right-0 top-0 absolute rounded-t-lg w-full"></canvas>
         <div
           class="absolute flex justify-center items-center gap-1 bottom-0 right-0 m-1 p-0.5 rounded-sm text-white font-medium text-xs bg-black/50 mb-1.5 select-none">
           <FontAwesomeIcon :icon="faList" />

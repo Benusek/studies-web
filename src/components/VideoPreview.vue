@@ -46,12 +46,12 @@ defineEmits(['mouseleaveVideo', 'playVideo', 'timeupdateVideo', 'loadVideo', 'ch
   <div v-else class="rounded-lg shadow-sm min-w-25 cursor-pointer" v-for="(video, index) in videos"
        :class="{'transition-all duration-150 active:bg-gray-100 active:scale-95': data.status.isClickVideo}">
     <div @mouseleave="$emit('mouseleaveVideo', video, $refs.videoElement[index])"
-         @mouseenter="$emit('playVideo', video, $refs.videoElement[index])"
-         class="bg-contain rounded-t-lg
+         @mouseenter="$refs.videoElement[index].readyState === 4 ? $emit('playVideo', video, $refs.videoElement[index]) : null"
+         class="bg-cover rounded-t-lg
            w-full bg-black bg-no-repeat h-0 relative" style="padding-top:56.25%;"
          :style="{'background-image': `url('http://videoapi/${video.photo_file}')`}">
       <canvas ref="canvas" :class="{'hidden': video.photo_file !== null}"
-              class="h-full mx-auto left-0 right-0 top-0 absolute"></canvas>
+              class="h-full mx-auto left-0 right-0 top-0 absolute rounded-t-lg"></canvas>
       <div>
         <div class="transition delay-250" :class="video.isHover ? 'opacity-100' : 'opacity-0'">
           <video disablePictureInPicture muted ref="videoElement" @click="isVideo"

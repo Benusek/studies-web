@@ -12,7 +12,7 @@ import {
   faN,
   faPlus,
   faSearch,
-  faUser, faUserPlus, faXmark
+  faUser, faUserPlus, faVideo, faXmark
 } from '@fortawesome/free-solid-svg-icons'
 import {
   faFlutter,
@@ -57,7 +57,8 @@ const data = ref({
   },
   modals: {
     isRegistration: false,
-    isAuthorization: false
+    isAuthorization: false,
+    isVideoAdding: false
   },
   forms: {
     registration: {
@@ -72,6 +73,18 @@ const data = ref({
       },
       fileURL: '',
       errors: {}
+    },
+    video: {
+      form: {
+        title: '',
+        description: '',
+        photo_file: '',
+        video_file: '',
+        category_id: 12
+      },
+      fileVideoURL: '',
+      errors: {},
+      categories: []
     },
     authorization: {
       form: {
@@ -146,7 +159,15 @@ onMounted(async () => {
   const result = await apiFetch('GET', `/category`)
   if (result) {
     allCategories.value = result
-    categories.value = result
+    result.forEach((category) => {
+      if (category.id === 12) {
+        category.isChecked = true
+      }
+      else {
+        category.isChecked = false
+      }
+      categories.value.push(category)
+    })
   }
   await getInfo()
 })
@@ -188,7 +209,7 @@ const registerForm = async (form) => {
   data.value.forms.registration.errors = {}
   const formData = new FormData()
   for (const key in form) {
-    if (form[key] !== '' && key !== 'photo_file') {
+    if (form[key] !== '') {
       formData.append(key, form[key])
     }
   }
@@ -217,8 +238,18 @@ const authForm = async (form) => {
 
   console.log(result)
   if (result?.error) {
-    data.value.forms.authorization.errors = result.error?.errors
+    if (result.error.message === 'Authentication failed') {
+      data.value.lists.isProcessing = false
+      data.value.forms.authorization.errors.password = [result.error.message]
+      data.value.forms.authorization.errors.login = []
+    }
+    else {
+      data.value.forms.authorization.errors = result.error?.errors
+    }
   }
+
+  console.log(result.error)
+
 
   if (result?.data) {
     updateToken(result.data.user_token)
@@ -247,15 +278,55 @@ const toggleAside = () => {
   data.value.lists.isOpenAside === true ? data.value.lists.isOpenAside = false : data.value.lists.isOpenAside = true
 }
 
-const changeFile = event => {
-  data.value.forms.registration.form.photo_file = event.target.files[0]
-  data.value.forms.registration.fileURL = URL.createObjectURL(event.target.files[0])
+const changeFile = (event, data) => {
+  data.form.photo_file = event.target.files[0]
+  data.fileURL = URL.createObjectURL(event.target.files[0])
+}
+
+const changeVideoFile = (event, data) => {
+  data.form.video_file = event.target.files[0]
+  data.fileVideoURL = URL.createObjectURL(event.target.files[0])
+}
+
+const addVideoForm = async() => {
+  if (data.value.lists.isProcessing) {
+    return
+  }
+
+  const formData = new FormData()
+  for (const key in data.value.forms.video.form) {
+      formData.append(key, data.value.forms.video.form[key])
+  }
+
+  data.value.lists.isProcessing = true
+  data.value.forms.video.errors = {}
+  const result = await apiFetch('POST', '/video', formData)
+
+  console.log(result)
+  if (result.error) {
+    data.value.forms.video.errors = result.error.errors
+  }
+
+  if (result?.data) {
+    data.value.modals.isVideoAdding = false
+    showToast('Вы успешно добавили видео', faVideo)
+  }
+
+  data.value.lists.isProcessing = false
 }
 
 const closedOutside = (event, menu, btn) => {
   if (!data.value.lists.isOpenList || !menu.contains(event.target) && !btn.contains(event.target)) {
     data.value.lists.isOpenList = false
   }
+}
+
+const changeCategory = category => {
+  categories.value.forEach(category => {
+    category.isChecked = false
+  })
+  category.isChecked = true
+  data.value.forms.video.form.category_id = category.id
 }
 
 const getRelativeTime = date => {
@@ -295,6 +366,7 @@ provide('token', token)
 provide('user-role', roleId)
 provide('updateToken', updateToken)
 provide('getFiltered', getFiltered)
+provide('showToast', showToast)
 
 </script>
 
@@ -377,17 +449,16 @@ provide('getFiltered', getFiltered)
               </div>
             </RouterLink>
           </li>
-          <li v-if="token && parseInt(roleId) === 2"
-              class="p-3 border-b border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300">
-            <RouterLink to="/reports">
-              <div class="p-3">
-                <FontAwesomeIcon class="p-x mr-3" :icon="faHeadset" />
-                <span>Жалобы</span>
-              </div>
-            </RouterLink>
-            >
-          </li>
-          <li v-if="token && parseInt(roleId) === 1"
+<!--          <li v-if="token && parseInt(roleId) === 2"-->
+<!--              class="p-3 border-b border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300">-->
+<!--            <RouterLink to="/reports">-->
+<!--              <div class="p-3">-->
+<!--                <FontAwesomeIcon class="p-x mr-3" :icon="faHeadset" />-->
+<!--                <span>Жалобы</span>-->
+<!--              </div>-->
+<!--            </RouterLink>-->
+<!--          </li>-->
+          <li v-if="token && parseInt(roleId) === 1" @click="data.modals.isVideoAdding = true"
               class="p-3 border-b border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300">
             <FontAwesomeIcon class="flex items-center mr-3" :icon="faPlus" />
             <span>Добавить видео</span>
@@ -401,15 +472,15 @@ provide('getFiltered', getFiltered)
               </div>
             </RouterLink>
           </li>
-          <li v-if="token && parseInt(roleId) === 1"
-              class="border-b border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300">
-            <RouterLink to="/my-reports">
-              <div class="p-3">
-                <FontAwesomeIcon class="flex items-center mr-3" :icon="faFlag" />
-                <span class="col-span-2">Жалобы</span>
-              </div>
-            </RouterLink>
-          </li>
+<!--          <li v-if="token && parseInt(roleId) === 1"-->
+<!--              class="border-b border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300">-->
+<!--            <RouterLink to="/my-reports">-->
+<!--              <div class="p-3">-->
+<!--                <FontAwesomeIcon class="flex items-center mr-3" :icon="faFlag" />-->
+<!--                <span class="col-span-2">Жалобы</span>-->
+<!--              </div>-->
+<!--            </RouterLink>-->
+<!--          </li>-->
           <li v-if="token" class="p-3 hover:bg-gray-200 rounded-b-xl sm:rounded-bl-xl sm:rounded-br-none border-b border-gray-300 hover:bg-gray-200 transition-all duration-100
             active:bg-gray-300" @click="logout">
             <FontAwesomeIcon class="flex items-center mr-3" :icon="faArrowRightFromBracket" />
@@ -588,7 +659,7 @@ provide('getFiltered', getFiltered)
                         alt="small image"
                         class="rounded-full aspect-square w-10 h-10 object-cover border border-gray-200 shadow-md hover:brightness-80 bg-gray-300" />
                     </div>
-                    <input type="file" id="photo" class="hidden" accept="image/*" @change="changeFile">
+                    <input type="file" id="photo" class="hidden" accept="image/*" @change="changeFile($event, data.forms.registration)">
                     <p v-if="data.forms.registration.form.photo_file"
                        class="flex justify-center text-gray-700 mt-2 w-50 line-clamp-1 break-words">
                       {{ data.forms.registration.form.photo_file.name }}
@@ -712,6 +783,125 @@ provide('getFiltered', getFiltered)
           </div>
         </template>
       </transition>
+
+      <!--Модальное окно добавления видео-->
+      <transition
+        enter-active-class="transition ease-out duration-300 transform"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="ease-in duration-200"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0">
+        <template v-if="data.modals.isVideoAdding && token">
+          <div class="fixed flex justify-center sm:items-center top-0 bottom-0 right-0 left-0 z-4">
+            <div class="flex items-center justify-center fixed bg-black/30 top-0 right-0 left-0 bottom-0"
+                 @click="data.modals.isVideoAdding = false;" />
+            <form v-show="data.modals.isVideoAdding" @submit.prevent="addVideoForm()"
+                  class="relative sm:rounded-xl bg-white w-full sm:w-auto h-full sm:h-fit overflow-auto">
+              <div class="flex justify-between items-center border-b border-b-gray-200 p-3 text-lg font-semibold">
+                <p class="">Добавление видео</p>
+                <FontAwesomeIcon :icon="faXmark" class="cursor-pointer hover:text-black/60"
+                                 @click="data.modals.isVideoAdding = false" />
+              </div>
+              <ul class="grid grid-cols-2 p-5 gap-6">
+                <li class="relative flex flex-col col-span-2 sm:col-span-1">
+                  <label for="title" class="absolute bg-white text-sm top-[-10px] left-5 px-1 text-gray-500"
+                         :class="{'text-red-600/70': data.forms.video.errors.title }">Название</label>
+                  <input v-model="data.forms.video.form.title" type="text" id="login"
+                         class="border border-gray-300 rounded-lg p-1.5 bg-gray-100/20"
+                         :class="{'border border-red-600/70': data.forms.video.errors.title }">
+                  <Error :errors="data.forms.video.errors.title" />
+                </li>
+                <li class="relative flex flex-col col-span-2 sm:col-span-1">
+                  <label for="description" class="absolute bg-white text-sm top-[-10px] left-5 px-1 text-gray-500"
+                         :class="{'text-red-600/70': data.forms.video.errors.description }">Описание</label>
+                  <input v-model="data.forms.video.form.description" type="text" autocomplete="on"
+                         id="description"
+                         class="border border-gray-300 rounded-lg p-1.5 bg-gray-100/20"
+                         :class="{'border border-red-600/70': data.forms.video.errors.description }">
+                  <Error :errors="data.forms.video.errors.description" />
+                </li>
+                <li class="flex flex-col gap-3 justify-start col-span-2 sm:col-span-1">
+                    <label for="preview" class="cursor-pointer">
+                      <span class="text-sm text-gray-600 p-2">Превью</span>
+                      <div class=" h-30 relative flex flex-row items-center gap-4 justify-center hover:brightness-80 rounded-xl"
+                           :class="{'bg-none': data.forms.video.form.photo_file, 'bg-black': !data.forms.video.form.photo_file}">
+                        <img
+                          :src="data.forms.video.form.photo_file ? data.forms.video.fileURL : '/src/assets/playlist-default.png'"
+                          alt="preview"
+                          class="object-contain rounded-xl max-h-30 w-55" :class="{'h-10': !data.forms.video.form.photo_file, 'h-auto': data.forms.video.form.photo_file}" />
+                      </div>
+                      <input type="file" id="preview" class="hidden" accept="image/*" @change="changeFile($event, data.forms.video)">
+                      <p v-if="data.forms.video.form.photo_file"
+                         class="mx-auto text-gray-700 mt-2 w-40 sm:w-50 line-clamp-1 break-words">
+                        {{ data.forms.video.form.photo_file.name }}
+                      </p>
+                      <p v-else class="flex justify-center text-gray-700 mt-2">Файл не
+                        выбран</p>
+                    </label>
+                  <Error :errors="data.forms.video.errors.photo_file" />
+                </li>
+                <li class="flex flex-col gap-3 justify-start col-span-2 sm:col-span-1">
+                  <label for="video" class="cursor-pointer">
+                    <span class="text-sm text-gray-600 p-2">Видео</span>
+                    <div class="relative hover:brightness-80 flex flex-row b rounded-xl gap-4 justify-center border bg-black border-gray-200 shadow-md justify-center items-center h-30">
+                      <img
+                        :src="data.forms.video.form.video_file ? '/src/assets/checking-video.png' : '/src/assets/video-default.png'"
+                        alt="large image"
+                        class="rounded-xl h-10 object-cover" />
+                    </div>
+                    <input type="file" id="video" class="hidden" accept="video/*" @change="changeVideoFile($event, data.forms.video)">
+                    <p v-if="data.forms.video.form.video_file"
+                       class="text-gray-700 mt-2 w-55 line-clamp-1 break-words">
+                      {{ data.forms.video.form.video_file.name }}
+                    </p>
+                    <p v-else class="flex justify-center text-gray-700 mt-2">Файл не
+                      выбран</p>
+                  </label>
+                  <Error :errors="data.forms.video.errors.video_file" />
+                </li>
+                <li class="col-span-2">
+                  <span class="text-sm text-gray-600 p-2">Категория</span>
+                  <div class="grid grid-cols-1 sm:grid-cols-3">
+                    <div v-for="category in categories" @click="changeCategory(category)" :class="{'bg-indigo-500 hover:bg-indigo-600 active:bg-indigo-700 text-white': category.isChecked}"
+                         class="transition-all duration-100 hover:bg-gray-100 active:bg-gray-200
+                 border-b border-gray-500/10 font-sans cursor-pointer flex gap-3 min-w-10 text-xs p-2">
+                      <FontAwesomeIcon :icon="icons[`${category.id}`]" class="text-lg" />
+                      <span>{{ category.name }}</span>
+                    </div>
+                  </div>
+                  <Error :errors="data.forms.video.errors.category_id" />
+                </li>
+
+                <li class="grid gap-2 col-span-2">
+                  <button :disabled="data.lists.isProcessing"
+                          class="relative w-full bg-blue-500 h-8 rounded-xl p-1 text-white font-medium cursor-pointer hover:bg-blue-400 flex justify-center">
+                    <span v-if="!data.lists.isProcessing">Добавить</span>
+                    <svg v-else aria-hidden="true"
+                         class="w-5 h-5 text-gray-200 animate-spin dark:text-gray-600 fill-black absolute top-1.5"
+                         viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                        d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                        fill="currentColor" />
+                      <path
+                        d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                        fill="currentFill" />
+                    </svg>
+                  </button>
+                  <button @click.prevent="data.modals.isVideoAdding = false" :disabled="data.lists.isProcessing"
+                          class="w-full bg-blue-500 rounded-xl p-1 text-white font-medium cursor-pointer hover:bg-blue-400">
+                    Закрыть
+                  </button>
+                </li>
+              </ul>
+            </form>
+
+          </div>
+        </template>
+      </transition>
+
+
+      <!--Модальное окно добавления видео в плейлист-->
 
       <transition
         enter-active-class="transition ease duration-1000 transform"

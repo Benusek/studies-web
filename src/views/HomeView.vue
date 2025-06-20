@@ -24,9 +24,9 @@ if (!data.value.category) {
 }
 
 onMounted(async () => {
-  const result = await apiFetch('GET', `/video/start/${data.value.videos.length}/count/20${data.value.category}`)
+  const result = await apiFetch('GET', `/video/start/${data.value.videos.length}/count/8${data.value.category}`)
   if (result.videos) {
-    if (result.videos.length < 20) {
+    if (result.videos.length < 8) {
       data.value.status.isUploading = false
     }
     result.videos.forEach(v => {
@@ -58,7 +58,7 @@ window.addEventListener('scroll', async () => {
   }
   if (window.innerHeight + window.pageYOffset >= document.documentElement.scrollHeight && data.value.status.isUploading) {
     data.value.status.isProcessing = true
-    const result = await apiFetch('GET', `/video/start/${data.value.videos.length}/count/20${data.value.category}`)
+    const result = await apiFetch('GET', `/video/start/${data.value.videos.length}/count/8${data.value.category}`)
 
     if (result.data) {
       data.value.status.isUploading = false

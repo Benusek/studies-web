@@ -322,7 +322,7 @@ const inputPage = () => {
       <VideoGridView :videos="data.response.videos" :isEmpty="data.status.isEmpty" :isResponse="data.status.isResponse"
                      :isProcessing="data.status.isProcessing"
                      :text="'К сожалению, на ваш поисковый запрос ничего не найдено'" />
-      <div v-if="!data.status.isEmpty && data.objects_count && data.objects_count.length > 1">
+      <div v-if="!data.status.isEmpty && data.objects_count && data.objects_count > 1"
            class="relative col-span-full flex items-end justify-center items-center gap-1">
         <div v-if="data.status.isPagination"
              class="absolute top-[-45px] bg-white border-2 border-gray-200  rounded-sm flex flex-row px-1 py-1 gap-2">

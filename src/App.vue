@@ -6,7 +6,7 @@ import {
   faArrowDown,
   faArrowLeft, faArrowRightFromBracket, faArrowUp,
   faBars, faBook,
-  faC, faFlag,
+  faC, faFileCirclePlus, faFlag,
   faGear, faHeadset,
   faList,
   faN,
@@ -58,7 +58,9 @@ const data = ref({
   modals: {
     isRegistration: false,
     isAuthorization: false,
-    isVideoAdding: false
+    isVideoAdding: false,
+    isPlaylistAdding: false,
+    isVideoPlaylistAdding: false
   },
   forms: {
     registration: {
@@ -74,6 +76,14 @@ const data = ref({
       fileURL: '',
       errors: {}
     },
+    playlist: {
+      form: {
+        title: '',
+        description: ''
+      },
+      errors: {}
+    },
+    playlist_video: {},
     video: {
       form: {
         title: '',
@@ -113,7 +123,9 @@ const data = ref({
     subscribe: []
   },
   videoQuery: '',
-  categoryQuery: ''
+  categoryQuery: '',
+  playlists: [],
+  videoInPlaylists: 1
 })
 
 
@@ -169,6 +181,13 @@ onMounted(async () => {
       categories.value.push(category)
     })
   }
+
+  const result2 = await apiFetch('GET', `/user/${id.value}/my-playlists`)
+  if (result2.playlists) {
+    data.value.playlists = result2.playlists
+  }
+
+
   await getInfo()
 })
 
@@ -176,12 +195,8 @@ const getInfo = async() => {
   if (localStorage.getItem('user-id')) {
     const result = await apiFetch('GET', `/user/${localStorage.getItem('user-id')}`)
     if (result) {
-      console.log(1)
       if (result.data) {
-        console.log(2)
         data.value.user = result.data
-        console.log(data.value.user)
-        console.log(3)
       }
     }
   }
@@ -249,7 +264,6 @@ const authForm = async (form) => {
   }
 
   console.log(result.error)
-
 
   if (result?.data) {
     updateToken(result.data.user_token)
@@ -360,6 +374,69 @@ const getRelativeTime = date => {
   }
 }
 
+const PlaylistForm = async() => {
+  if (data.value.lists.isProcessing) {
+    return
+  }
+
+  data.value.lists.isProcessing = true
+  data.value.forms.playlist.errors = {}
+  const result = await apiFetch('POST', '/playlist', data.value.forms.playlist.form)
+
+  console.log(result)
+  if (result?.error) {
+      data.value.forms.playlist.errors = result.error?.errors
+  }
+
+  console.log(result.error)
+
+
+  if (result?.data) {
+    data.value.modals.isPlaylistAdding = false
+    showToast('Плейлист успешно создан', faList)
+  }
+
+  data.value.lists.isProcessing = false
+}
+
+const getVideoPlaylistModal = async(video) => {
+  if (data.value.lists.isProcessing) {
+    return
+  }
+
+  data.value.lists.isProcessing = true
+
+  data.value.playlists.forEach((p) => {
+    p.isAdded = false
+  })
+
+  data.value.modals.isVideoPlaylistAdding = true
+  data.value.videoInPlaylists = video.id
+
+  const result = await apiFetch('GET', `/user/video/${data.value.videoInPlaylists}/playlist`)
+  console.log(result)
+  if (result) {
+    result.forEach((p) => {
+      data.value.playlists[data.value.playlists.findIndex(obj => obj.id === p.playlist_id)].isAdded = true
+    })
+  }
+
+  data.value.lists.isProcessing = false
+}
+
+const changeVideoPlaylist = async(playlist) => {
+  console.log(playlist.isAdded)
+  if (playlist.isAdded) {
+    apiFetch('DELETE', `/playlist/${playlist.id}/video/${data.value.videoInPlaylists}`)
+    playlist.isAdded = false
+  }
+  else {
+    await apiFetch('GET', `/playlist/${playlist.id}/video/${data.value.videoInPlaylists}`)
+    playlist.isAdded = true
+  }
+}
+
+provide('getVideoPlaylistModal', getVideoPlaylistModal)
 provide('getRelativeTime', getRelativeTime)
 provide('user-id', id)
 provide('token', token)
@@ -449,19 +526,24 @@ provide('showToast', showToast)
               </div>
             </RouterLink>
           </li>
-<!--          <li v-if="token && parseInt(roleId) === 2"-->
-<!--              class="p-3 border-b border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300">-->
-<!--            <RouterLink to="/reports">-->
-<!--              <div class="p-3">-->
-<!--                <FontAwesomeIcon class="p-x mr-3" :icon="faHeadset" />-->
-<!--                <span>Жалобы</span>-->
-<!--              </div>-->
-<!--            </RouterLink>-->
-<!--          </li>-->
-          <li v-if="token && parseInt(roleId) === 1" @click="data.modals.isVideoAdding = true"
+          <li v-if="token && parseInt(roleId) === 2"
+              class="p-3 border-b border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300">
+            <RouterLink to="/reports">
+              <div class="p-3">
+                <FontAwesomeIcon class="p-x mr-3" :icon="faHeadset" />
+                <span>Жалобы</span>
+              </div>
+            </RouterLink>
+          </li>
+          <li v-if="token && parseInt(roleId) === 1" @click="data.modals.isPlaylistAdding = true"
               class="p-3 border-b border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300">
             <FontAwesomeIcon class="flex items-center mr-3" :icon="faPlus" />
-            <span>Добавить видео</span>
+            <span>Создать плейлист</span>
+          </li>
+          <li v-if="token && parseInt(roleId) === 1" @click="data.modals.isVideoAdding = true"
+              class="p-3 border-b border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300">
+            <FontAwesomeIcon class="flex items-center mr-3" :icon="faFileCirclePlus" />
+            <span>Создать видео</span>
           </li>
           <li v-if="token && parseInt(roleId) === 1"
               class="border-b border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300">
@@ -784,7 +866,7 @@ provide('showToast', showToast)
         </template>
       </transition>
 
-      <!--Модальное окно добавления видео-->
+      <!--Модальное окно создания видео-->
       <transition
         enter-active-class="transition ease-out duration-300 transform"
         enter-from-class="opacity-0"
@@ -799,7 +881,7 @@ provide('showToast', showToast)
             <form v-show="data.modals.isVideoAdding" @submit.prevent="addVideoForm()"
                   class="relative sm:rounded-xl bg-white w-full sm:w-auto h-full sm:h-fit overflow-auto">
               <div class="flex justify-between items-center border-b border-b-gray-200 p-3 text-lg font-semibold">
-                <p class="">Добавление видео</p>
+                <p class="">Создание видео</p>
                 <FontAwesomeIcon :icon="faXmark" class="cursor-pointer hover:text-black/60"
                                  @click="data.modals.isVideoAdding = false" />
               </div>
@@ -900,8 +982,116 @@ provide('showToast', showToast)
         </template>
       </transition>
 
+      <!--Модальное окно создания плейлиста-->
+      <transition
+        enter-active-class="transition ease-out duration-300 transform"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="ease-in duration-200"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0">
+        <template v-if="data.modals.isPlaylistAdding && token">
+          <div class="fixed flex justify-center sm:items-center top-0 bottom-0 right-0 left-0 z-4">
+            <div class="flex items-center justify-center fixed bg-black/30 top-0 right-0 left-0 bottom-0"
+                 @click="data.modals.isPlaylistAdding = false;" />
+            <form v-show="data.modals.isPlaylistAdding" @submit.prevent="PlaylistForm"
+                  class="relative sm:rounded-xl bg-white w-full sm:w-auto h-full sm:h-fit overflow-auto">
+              <div class="flex justify-between items-center border-b border-b-gray-200 p-3 text-lg font-semibold">
+                <p class="">Создание плейлиста</p>
+                <FontAwesomeIcon :icon="faXmark" class="cursor-pointer hover:text-black/60"
+                                 @click="data.modals.isPlaylistAdding = false" />
+              </div>
+              <ul class="grid grid-cols-1 p-5 gap-6">
+                <li class="relative flex flex-col">
+                  <label for="title" class="absolute bg-white text-sm top-[-10px] left-5 px-1 text-gray-500"
+                         :class="{'text-red-600/70': data.forms.playlist.errors.title }">Название</label>
+                  <input v-model="data.forms.playlist.form.title" type="text" id="title"
+                         class="border border-gray-300 rounded-lg p-1.5 bg-gray-100/20"
+                         :class="{'border border-red-600/70': data.forms.playlist.errors.title }">
+                  <Error :errors="data.forms.playlist.errors.title" />
+                </li>
+                <li class="relative flex flex-col">
+                  <label for="description" class="absolute bg-white text-sm top-[-10px] left-5 px-1 text-gray-500"
+                         :class="{'text-red-600/70': data.forms.playlist.errors.description }">Описание</label>
+                  <input v-model="data.forms.playlist.form.description" type="text" autocomplete="on"
+                         id="description"
+                         class="border border-gray-300 rounded-lg p-1.5 bg-gray-100/20"
+                         :class="{'border border-red-600/70': data.forms.playlist.errors.description }">
+                  <Error :errors="data.forms.playlist.errors.description" />
+                </li>
+                <li class="grid gap-2">
+                  <button :disabled="data.lists.isProcessing"
+                          class="relative w-full bg-blue-500 h-8 rounded-xl p-1 text-white font-medium cursor-pointer hover:bg-blue-400 flex justify-center">
+                    <span v-if="!data.lists.isProcessing">Создать</span>
+                    <svg v-else aria-hidden="true"
+                         class="w-5 h-5 text-gray-200 animate-spin dark:text-gray-600 fill-black absolute top-1.5"
+                         viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                        d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                        fill="currentColor" />
+                      <path
+                        d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                        fill="currentFill" />
+                    </svg>
+                  </button>
+                  <button @click.prevent="data.modals.isPlaylistAdding = false" :disabled="data.lists.isProcessing"
+                          class="w-full bg-blue-500 rounded-xl p-1 text-white font-medium cursor-pointer hover:bg-blue-400">
+                    Закрыть
+                  </button>
+                </li>
+              </ul>
+            </form>
+          </div>
+        </template>
+      </transition>
 
       <!--Модальное окно добавления видео в плейлист-->
+      <transition
+        enter-active-class="transition ease-out duration-300 transform"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="ease-in duration-200"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0">
+        <template v-if="data.modals.isVideoPlaylistAdding && token">
+          <div class="fixed flex justify-center sm:items-center top-0 bottom-0 right-0 left-0 z-4">
+            <div class="flex items-center justify-center fixed bg-black/30 top-0 right-0 left-0 bottom-0"
+                 @click="data.modals.isVideoPlaylistAdding = false;" />
+            <form v-show="data.modals.isVideoPlaylistAdding" @submit.prevent="PlaylistForm"
+                  class="relative sm:rounded-xl bg-white w-full sm:w-auto h-full sm:h-fit overflow-auto">
+              <div class="flex justify-between items-center border-b border-b-gray-200 p-3 text-lg font-semibold gap-6">
+                <p class="text-sm">Добавление видео в плейлист</p>
+                <FontAwesomeIcon :icon="faXmark" class="cursor-pointer hover:text-black/60"
+                                 @click="data.modals.isVideoPlaylistAdding = false" />
+              </div>
+              <ul class="grid grid-cols-1 p-5 gap-2 overflow-auto h-90">
+                <li v-if="!data.lists.isProcessing" v-for="playlist in data.playlists" @click="changeVideoPlaylist(playlist)" :class="{'bg-indigo-500 active:bg-indigo-700 hover:bg-indigo-600': playlist.isAdded}"
+                    class="w-full max-w-60 rounded-lg bg-blue-500 active:bg-blue-700 hover:bg-blue-600cursor-pointer select-none p-2">
+                  <span class="font-medium text-sm text-white line-clamp-1 break-words ">{{playlist.title}}</span>
+                </li>
+                <li v-if="data.lists.isProcessing" class="flex justify-center items-end">
+                  <svg aria-hidden="true"
+                       class="w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-black"
+                       viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                      fill="currentColor" />
+                    <path
+                      d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                      fill="currentFill" />
+                  </svg>
+                </li>
+                <li class="flex justify-center items-end">
+                  <button @click.prevent="data.modals.isVideoPlaylistAdding = false" :disabled="data.lists.isProcessing"
+                          class="w-full mt-3 border-2 border-blue-500 rounded-xl p-1 text-blue-500 font-medium cursor-pointer hover:bg-gray-100 active:bg-gray-200">
+                    Закрыть
+                  </button>
+                </li>
+              </ul>
+            </form>
+          </div>
+        </template>
+      </transition>
 
       <transition
         enter-active-class="transition ease duration-1000 transform"

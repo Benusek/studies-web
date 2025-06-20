@@ -102,7 +102,28 @@ onMounted(async () => {
     data.value.status.isResponse = true
   }
 
+  if (result.data.count_playlists) {
+    data.value.response.count_playlists = result.data.count_playlists
+    data.value.objects_count = result.data.count_playlists
+  }
+
+  if (result.data.count_videos) {
+    data.value.response.count_videos = result.data.count_videos
+    data.value.objects_count += result.data.count_videos
+  }
+
+  if (result.data.count_videos === 0 && result.data.count_playlists === 0 || result.data.length === 0) {
+    data.value.status.isEmpty = true
+    data.value.status.isUploading = false
+  }
+
+  if (data.value.objects_count !== 0) {
+    (data.value.objects_count / 5) % 1 !== 0 ? data.value.objects_count = Math.floor(data.value.objects_count / 5) + 1 :  data.value.objects_count = Math.floor(data.value.objects_count / 5)
+  }
+
   requestPage(result)
+  console.log(data.value.objects_count / 5)
+
 })
 
 const sortTags = (tag) => {
@@ -182,25 +203,6 @@ const requestPage = (result) => {
 
     if (result.data.length === 0) {
       data.value.status.isEmpty = true
-    }
-
-    if (result.data.count_playlists) {
-      data.value.response.count_playlists = result.data.count_playlists
-      data.value.objects_count = result.data.count_playlists
-    }
-
-    if (result.data.count_videos) {
-      data.value.response.count_videos = result.data.count_videos
-      data.value.objects_count += result.data.count_videos
-    }
-
-    if (data.value.objects_count !== 0) {
-      (data.value.objects_count / 5) % 1 !== 0 ? data.value.objects_count = Math.floor(data.value.objects_count / 5) + 1 :  data.value.objects_count = Math.floor(data.value.objects_count / 5)
-    }
-
-    if (result.data.count_videos === 0 && result.data.count_playlists === 0 || result.data.length === 0) {
-      data.value.status.isEmpty = true
-      data.value.status.isUploading = false
     }
   }
 

@@ -111,13 +111,13 @@ defineEmits(['mouseleaveVideo', 'playVideo', 'timeupdateVideo', 'loadVideo', 'ch
              alt="user">
       </RouterLink>
       <div class="col-span-7">
-        <RouterLink to="/" class="text-xs sm:text-sm md:text-base font-semibold leading-none break-words line-clamp-2">
+        <RouterLink :to="'/watch/' + video.id" class="text-xs sm:text-sm md:text-base font-semibold leading-none break-words line-clamp-2">
           {{ video.title }}
         </RouterLink>
         <RouterLink :to="'/channel/' + video.user.id" class="text-xs line-clamp-1 mt-1 text-gray-600 w-fit">
           {{ video.user.name }}
         </RouterLink>
-        <RouterLink to="/" class="text-xs line-clamp-1 text-gray-600">
+        <RouterLink :to="'/watch/' + video.id" class="text-xs line-clamp-1 text-gray-600">
           {{ video.created_at }}
         </RouterLink>
       </div>

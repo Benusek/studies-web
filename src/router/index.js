@@ -7,6 +7,7 @@ import SettingsView from '@/views/SettingsView.vue'
 import SubscribersView from '@/views/SubscribersView.vue'
 import ReportsView from '@/views/ReportsView.vue'
 import SearchView from '@/views/SearchView.vue'
+import WatchingView from '@/views/WatchingView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -48,13 +49,21 @@ const router = createRouter({
       }
     },
     {
-      path: '/my-reports',
-      name: 'my-reports',
-      component: MyReportsView,
+      path: '/watch/:video',
+      name: 'watch',
+      component: WatchingView,
       meta: {
-        forAuth: true
+        forAuth: false
       }
     },
+    // {
+    //   path: '/my-reports',
+    //   name: 'my-reports',
+    //   component: MyReportsView,
+    //   meta: {
+    //     forAuth: true
+    //   }
+    // },
     {
       path: '/playlists',
       name: 'playlists',
@@ -63,14 +72,14 @@ const router = createRouter({
         forAuth: true
       }
     },
-    {
-      path: '/reports',
-      name: 'reports',
-      component: ReportsView,
-      meta: {
-        forAuth: true
-      }
-    }
+    // {
+    //   path: '/reports',
+    //   name: 'reports',
+    //   component: ReportsView,
+    //   meta: {
+    //     forAuth: true
+    //   }
+    // }
   ],
 })
 

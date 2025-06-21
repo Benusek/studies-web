@@ -6,7 +6,7 @@ import {
   faArrowDown,
   faArrowLeft, faArrowRightFromBracket, faArrowUp,
   faBars, faBook,
-  faC, faFileCirclePlus, faFlag,
+  faC, faFileCirclePlus,
   faGear, faHeadset,
   faList,
   faN,
@@ -182,13 +182,14 @@ onMounted(async () => {
     })
   }
 
-  const result2 = await apiFetch('GET', `/user/${id.value}/my-playlists`)
-  if (result2.playlists) {
-    data.value.playlists = result2.playlists
+  if (token.value) {
+    const result2 = await apiFetch('GET', `/user/${id.value}/my-playlists`)
+    if (result2.playlists) {
+      data.value.playlists = result2.playlists
+    }
+    await getInfo()
   }
 
-
-  await getInfo()
 })
 
 const getInfo = async() => {
@@ -659,12 +660,12 @@ provide('showToast', showToast)
                     <FontAwesomeIcon :icon="faGear" class="ms-3" />
                     <p v-if="!data.lists.isOpenAside" class="text-xs">Настройки</p>
                   </RouterLink>
-                  <RouterLink :to="'/my-reports/'"
-                              class="flex items-center p-2 cursor-pointer border-b border-gray-500/10 hover:bg-gray-100 gap-3 transition-all duration-100 active:bg-gray-200"
-                              :class="!data.lists.isOpenAside ? 'shadow-xs' : 'shadow-sm rounded-sm'">
-                    <FontAwesomeIcon :icon="faFlag" class="ms-3" />
-                    <p v-if="!data.lists.isOpenAside" class="text-xs">Жалобы</p>
-                  </RouterLink>
+<!--                  <RouterLink :to="'/my-reports/'"-->
+<!--                              class="flex items-center p-2 cursor-pointer border-b border-gray-500/10 hover:bg-gray-100 gap-3 transition-all duration-100 active:bg-gray-200"-->
+<!--                              :class="!data.lists.isOpenAside ? 'shadow-xs' : 'shadow-sm rounded-sm'">-->
+<!--                    <FontAwesomeIcon :icon="faFlag" class="ms-3" />-->
+<!--                    <p v-if="!data.lists.isOpenAside" class="text-xs">Жалобы</p>-->
+<!--                  </RouterLink>-->
                 </div>
 
               </li>

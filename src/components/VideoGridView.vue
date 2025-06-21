@@ -1,6 +1,4 @@
 <script setup>
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { faHome, faPhotoFilm } from '@fortawesome/free-solid-svg-icons'
 import VideoPreview from '@/components/VideoPreview.vue'
 import NotFound from '@/components/NotFound.vue'
 

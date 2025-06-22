@@ -29,7 +29,7 @@ const pickPlaylists = async(menu) => {
       examResult(all)
       break
     case 2:
-      const my = await apiFetch('GET', `/user/${data.value.id}/my-playlists`)
+      const my = await apiFetch('GET', `my-playlists`)
       examResult(my)
       break
     case 3:

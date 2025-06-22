@@ -192,15 +192,6 @@ const sendForm = async () => {
                    :class="{'border border-red-600/70': data.edit.errors.password }">
             <Error :errors="data.edit.errors.password" />
           </li>
-          <li class="relative flex flex-col">
-            <label for="confirm_password" class=" absolute bg-white text-sm top-[-10px] left-5 px-1 text-gray-500"
-                   :class="{'text-red-600/70': data.edit.errors.password }">Пароль</label>
-            <input v-model="data.edit.form.password" type="password" autocomplete="on" id="confirm_password"
-                   placeholder="••••••••••"
-                   class="border border-gray-300 rounded-lg p-1.5 bg-gray-100/20"
-                   :class="{'border border-red-600/70': data.edit.errors.password }">
-            <Error :errors="data.edit.errors.password" />
-          </li>
         </ul>
       </div>
 

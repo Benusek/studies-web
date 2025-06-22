@@ -189,7 +189,6 @@ onMounted(async () => {
     }
     await getInfo()
   }
-
 })
 
 const getInfo = async() => {

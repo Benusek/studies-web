@@ -823,21 +823,23 @@ provide('showToast', showToast)
               </div>
               <ul class="grid grid-cols-1 p-5 gap-6">
                 <li class="relative flex flex-col">
-                  <label for="login" class="absolute bg-white text-sm top-[-10px] left-5 px-1 text-gray-500"
-                         :class="{'text-red-600/70': data.forms.authorization.errors.login }">Логин</label>
+<!--                  class="absolute bg-white text-sm top-[-10px] left-5 px-1 text-gray-500"-->
                   <input v-model="data.forms.authorization.form.login" type="text" id="login"
-                         class="border border-gray-300 rounded-lg p-1.5 bg-gray-100/20"
-                         :class="{'border border-red-600/70': data.forms.authorization.errors.login }">
+                         class="border border-gray-300 rounded-lg p-1.5 bg-gray-100/20 peer"
+                         :class="{'border border-red-600/70': data.forms.authorization.errors.login}">
+                  <label for="login" class="absolute top-1.5 left-2 text-gray-500 select-none cursor-text peer-focus:text-xs
+                  peer-focus:top-[-18px] peer-focus:px-1 transition-all duration-300"
+                         :class="{'text-red-600/70': data.forms.authorization.errors.login, 'top-[-18px] px-1 text-xs': data.forms.authorization.form.login.length}">Логин</label>
                   <Error :errors="data.forms.authorization.errors.login" />
                 </li>
                 <li class="relative flex flex-col">
-                  <label for="password" class="absolute bg-white text-sm top-[-10px] left-5 px-1 text-gray-500"
-                         :class="{'text-red-600/70': data.forms.authorization.errors.password }">Пароль</label>
                   <input v-model="data.forms.authorization.form.password" type="password" autocomplete="on"
                          id="password"
-                         placeholder="••••••••••"
-                         class="border border-gray-300 rounded-lg p-1.5 bg-gray-100/20"
+                         class="border border-gray-300 rounded-lg p-1.5 bg-gray-100/20 peer"
                          :class="{'border border-red-600/70': data.forms.authorization.errors.password }">
+                  <label for="password" class="absolute top-1.5 left-2 text-gray-500 select-none cursor-text peer-focus:text-xs
+                  peer-focus:top-[-18px] peer-focus:px-1 transition-all duration-300"
+                         :class="{'text-red-600/70': data.forms.authorization.errors.password, 'top-[-18px] px-1 text-xs': data.forms.authorization.form.password.length }">Пароль</label>
                   <Error :errors="data.forms.authorization.errors.password" />
                 </li>
                 <li class="grid gap-2">

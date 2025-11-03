@@ -6,6 +6,6 @@ defineProps({
 
 <template>
   <div class="text-red-600/70 text-xs" v-for="error in errors">
-   {{ error }}
+    {{ error }}
   </div>
 </template>

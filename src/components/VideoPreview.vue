@@ -1,6 +1,7 @@
 <script setup>
 import { faEllipsisVertical, faList, faVolumeHigh, faVolumeXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import Video from '@/components/Loaders/Video.vue'
 import { inject, ref } from 'vue'
 
 const props = defineProps({
@@ -13,7 +14,6 @@ props.videos.forEach((v) => {
 })
 
 const token = inject('token')
-console.log(token)
 
 const data = ref({
   status: {
@@ -31,8 +31,7 @@ const isVideo = () => {
 const changeMenu = (video) => {
   if (video.isMenu) {
     video.isMenu = false
-  }
-  else {
+  } else {
     props.videos.forEach((v) => {
       v.isMenu = false
     })
@@ -43,30 +42,17 @@ const changeMenu = (video) => {
 
 const getVideoPlaylists = inject('getVideoPlaylistModal')
 
-defineEmits(['mouseleaveVideo', 'playVideo', 'timeupdateVideo', 'loadVideo', 'changeRange', 'pauseVideo', 'toggleMutedVideo']);
+defineEmits(['mouseleaveVideo', 'playVideo', 'timeupdateVideo', 'loadVideo', 'changeRange', 'pauseVideo', 'toggleMutedVideo'])
 
 </script>
 
 <template>
-  <div v-if="!isResponse" class="rounded-lg shadow-sm min-w-25 cursor-pointer animate-pulse" v-for="i in 30">
-    <div class="bg-contain rounded-t-lg w-full bg-gray-300 bg-no-repeat h-0 relative"
-         style="padding-top:56.25%;"></div>
-    <div class="p-2 grid grid-cols-6 gap-1">
-      <div class="flex justify-center py-1.5">
-        <div class="py-1.5 col-span-1 aspect-square w-10 rounded-full bg-gray-300" />
-      </div>
-      <div class="col-span-5">
-        <p
-          class="text-xs sm:text-sm h-2 opacity-10 bg-current text-lg font-semibold leading-6 break-words line-clamp-2 mb-3"></p>
-        <p class="h-2 opacity-10 bg-current text-lg font-semibold leading-6 break-words line-clamp-2"></p>
-      </div>
-    </div>
-  </div>
-  <div v-else class="rounded-lg shadow-sm min-w-25 cursor-pointer" v-for="(video, index) in props.videos"
+  <Video v-if="!isResponse" />
+  <div v-else class="rounded-lg shadow-sm min-w-25 cursor-pointer p-1" v-for="(video, index) in props.videos"
        :class="{'transition-all duration-150 active:bg-gray-100 active:scale-95': data.status.isClickVideo}">
     <div @mouseleave="$emit('mouseleaveVideo', video, $refs.videoElement[index])"
          @mouseenter="$refs.videoElement[index].readyState === 4 ? $emit('playVideo', video, $refs.videoElement[index]) : null"
-         class="bg-cover rounded-t-lg
+         class="bg-cover rounded-lg
            w-full bg-black bg-no-repeat h-0 relative" style="padding-top:56.25%;"
          :style="{'background-image': `url('http://videoapi/${video.photo_file}')`}">
       <canvas ref="canvas" :class="{'hidden': video.photo_file !== null}"
@@ -82,7 +68,7 @@ defineEmits(['mouseleaveVideo', 'playVideo', 'timeupdateVideo', 'loadVideo', 'ch
             <source :src="`http://videoapi/${video.video_file}`" type="video/mp4" />
           </video>
           <input type="range" @input="$emit('changeRange', $event, video, $refs.videoElement[index])"
-                 @change="$emit('changeRange', $event, video, $refs.videoElement[index])"  @click="isNotVideo"
+                 @change="$emit('changeRange', $event, video, $refs.videoElement[index])" @click="isNotVideo"
                  @mousedown="$emit('pauseVideo', video, $refs.videoElement[index])" class="[&::-webkit-slider-thumb]:hidden hover:[&::-webkit-slider-thumb]:block
         h-1 z-1 accent-red-500 outline-none [&::-webkit-slider-thumb]:shadow-orange-400
         shadow-orange-400 bg-black/20 appearance-none rounded-none  cursor-pointer absolute bottom-0 w-full"
@@ -111,7 +97,8 @@ defineEmits(['mouseleaveVideo', 'playVideo', 'timeupdateVideo', 'loadVideo', 'ch
              alt="user">
       </RouterLink>
       <div class="col-span-7">
-        <RouterLink :to="'/watch/' + video.id" class="text-xs sm:text-sm md:text-base font-semibold leading-none break-words line-clamp-2">
+        <RouterLink :to="'/watch/' + video.id"
+                    class="text-xs sm:text-sm md:text-base font-semibold leading-none break-words line-clamp-2">
           {{ video.title }}
         </RouterLink>
         <RouterLink :to="'/channel/' + video.user.id" class="text-xs line-clamp-1 mt-1 text-gray-600 w-fit">
@@ -121,19 +108,16 @@ defineEmits(['mouseleaveVideo', 'playVideo', 'timeupdateVideo', 'loadVideo', 'ch
           {{ video.created_at }}
         </RouterLink>
       </div>
-      <div v-if="video.isMenu" class="absolute bottom-15 right-[-5px] shadow-lg border border-gray-300 p-1 bg-white rounded-sm text-xs flex gap-2
-      items-center font-medium hover:bg-gray-100 active:bg-gray-200"
+
+      <div class="flex justify-end" v-if="token" @click="isNotVideo(); changeMenu(video)">
+        <FontAwesomeIcon class="block mr-2 mt-1 text-sm" :icon="faEllipsisVertical" />
+      </div>
+      <div v-if="video.isMenu" class="absolute bottom-15 right-[-5px] border border-gray-300 p-2 bg-white rounded-sm text-sm flex gap-2
+      items-center font-medium hover:bg-gray-100 active:bg-gray-200 z-1"
            @click="isNotVideo(); getVideoPlaylists(video)">
         <FontAwesomeIcon :icon="faList" />
         <span>Добавить в плейлист</span>
       </div>
-      <div class="flex justify-end" v-if="token" @click="isNotVideo(); changeMenu(video)">
-        <FontAwesomeIcon class="block mr-2 mt-1 text-sm" :icon="faEllipsisVertical" />
-      </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-
-</style>

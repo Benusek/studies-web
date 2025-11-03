@@ -35,10 +35,11 @@ function captureFrameAtTime(timeInSeconds, videoElement, videoCanvas) {
     </div>
 
     <div class="relative flex justify-center items-center">
-      <div class="translate-y-2 rounded-t-lg w-full bg-black bg-contain w-full bg-no-repeat border-t border-white bg-center"
-           :class="{'brightness-60': playlist.isHover, 'bg-size-[20%]': !playlist.videos}"
-           style="padding-top:56.25%;"
-           :style="{'background-image':
+      <div
+        class="translate-y-2 rounded-t-lg w-full bg-black bg-contain w-full bg-no-repeat border-t border-white bg-center"
+        :class="{'brightness-60': playlist.isHover, 'bg-size-[20%]': !playlist.videos}"
+        style="padding-top:56.25%;"
+        :style="{'background-image':
            `url('${ playlist.videos ? 'http://videoapi/' + playlist.videos[0].photo_file : '/src/assets/playlist-default.png' }')`}">
         <video ref="PlaylistElement"
                @loadeddata="playlist.videos ? playlist.videos[0].photo_file ?  null : captureFrameAtTime(5, $refs.PlaylistElement[index], $refs.canvas[index]) : null "

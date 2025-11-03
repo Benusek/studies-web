@@ -118,7 +118,7 @@ onMounted(async () => {
   }
 
   if (data.value.objects_count !== 0) {
-    (data.value.objects_count / 5) % 1 !== 0 ? data.value.objects_count = Math.floor(data.value.objects_count / 5) + 1 :  data.value.objects_count = Math.floor(data.value.objects_count / 5)
+    (data.value.objects_count / 5) % 1 !== 0 ? data.value.objects_count = Math.floor(data.value.objects_count / 5) + 1 : data.value.objects_count = Math.floor(data.value.objects_count / 5)
   }
 
   requestPage(result)
@@ -221,16 +221,14 @@ const requestPage = (result) => {
 }
 
 const inputPage = () => {
- if (data.value.input_page === '' || data.value.input_page % 1 !== 0) {
-   return
- }
+  if (data.value.input_page === '' || data.value.input_page % 1 !== 0) {
+    return
+  }
   if (data.value.input_page > data.value.objects_count) {
     changePosition(data.value.objects_count)
-  }
-  else if (data.value.input_page < 1) {
+  } else if (data.value.input_page < 1) {
     changePosition(1)
-  }
-  else {
+  } else {
     changePosition(data.value.input_page)
   }
   data.value.status.isPagination = false
@@ -328,10 +326,11 @@ const inputPage = () => {
            class="relative col-span-full flex items-end justify-center items-center gap-1">
         <div v-if="data.status.isPagination"
              class="absolute top-[-45px] bg-white border-2 border-gray-200  rounded-sm flex flex-row px-1 py-1 gap-2">
-          <input v-model="data.input_page" type="number" class="px-2 w-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+          <input v-model="data.input_page" type="number"
+                 class="px-2 w-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
           <div class="flex gap-1">
             <div @click="inputPage"
-              class="px-2 py-0.5 rounded-sm select-none cursor-pointer bg-blue-500 text-white active:bg-blue-700 hover:bg-blue-600">
+                 class="px-2 py-0.5 rounded-sm select-none cursor-pointer bg-blue-500 text-white active:bg-blue-700 hover:bg-blue-600">
               <FontAwesomeIcon :icon="faCheck" />
             </div>
             <div @click="data.status.isPagination = false"
@@ -353,18 +352,20 @@ const inputPage = () => {
              class="border-2 border-gray-200 px-2 py-0.5 rounded-sm select-none cursor-pointer active:bg-gray-100/60 hover:bg-gray-100/30 text-gray-500">
           1
         </div>
-        <div v-if="data.current_page === data.objects_count  && data.objects_count > 3 || data.current_page === data.objects_count - 1 && data.objects_count > 3"
-             @click="data.status.isPagination ? data.status.isPagination = false : data.status.isPagination = true"
-             class="border-2 border-gray-200 px-2 py-0.5 rounded-sm select-none cursor-pointer active:bg-gray-100/60 hover:bg-gray-100/30 text-gray-500">
+        <div
+          v-if="data.current_page === data.objects_count  && data.objects_count > 3 || data.current_page === data.objects_count - 1 && data.objects_count > 3"
+          @click="data.status.isPagination ? data.status.isPagination = false : data.status.isPagination = true"
+          class="border-2 border-gray-200 px-2 py-0.5 rounded-sm select-none cursor-pointer active:bg-gray-100/60 hover:bg-gray-100/30 text-gray-500">
           ...
         </div>
         <div
-             class="border-2 border-gray-200 px-2 py-0.5 rounded-sm select-none cursor-pointer bg-blue-500 text-white active:bg-blue-700 hover:bg-blue-600"
-             @click="changePosition(data.current_page)">{{ data.current_page }}
+          class="border-2 border-gray-200 px-2 py-0.5 rounded-sm select-none cursor-pointer bg-blue-500 text-white active:bg-blue-700 hover:bg-blue-600"
+          @click="changePosition(data.current_page)">{{ data.current_page }}
         </div>
-        <div v-if="data.current_page !== data.objects_count && data.current_page !== data.objects_count - 1 && data.objects_count > 3"
-             @click="data.status.isPagination ? data.status.isPagination = false : data.status.isPagination = true"
-             class="border-2 border-gray-200 px-2 py-0.5 rounded-sm select-none cursor-pointer active:bg-gray-100/60 hover:bg-gray-100/30 text-gray-500">
+        <div
+          v-if="data.current_page !== data.objects_count && data.current_page !== data.objects_count - 1 && data.objects_count > 3"
+          @click="data.status.isPagination ? data.status.isPagination = false : data.status.isPagination = true"
+          class="border-2 border-gray-200 px-2 py-0.5 rounded-sm select-none cursor-pointer active:bg-gray-100/60 hover:bg-gray-100/30 text-gray-500">
           ...
         </div>
         <div v-if="data.current_page !== data.objects_count"

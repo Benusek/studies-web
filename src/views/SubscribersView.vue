@@ -3,9 +3,5 @@
 </script>
 
 <template>
-Мои подписчики
+Мои подписки
 </template>
-
-<style scoped>
-
-</style>

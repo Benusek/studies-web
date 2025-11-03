@@ -1,11 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import ChannelView from '@/views/ChannelView.vue'
-import MyReportsView from '@/views/MyReportsView.vue'
 import PlaylistsView from '@/views/PlaylistsView.vue'
 import SettingsView from '@/views/SettingsView.vue'
 import SubscribersView from '@/views/SubscribersView.vue'
-import ReportsView from '@/views/ReportsView.vue'
 import SearchView from '@/views/SearchView.vue'
 import WatchingView from '@/views/WatchingView.vue'
 
@@ -16,11 +14,14 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: HomeView,
+      meta: {
+        title: 'Главная'
+      }
     },
     {
       path: '/category/:category',
       name: 'category',
-      component: HomeView,
+      component: HomeView
     },
     {
       path: '/search/:query',
@@ -56,14 +57,6 @@ const router = createRouter({
         forAuth: false
       }
     },
-    // {
-    //   path: '/my-reports',
-    //   name: 'my-reports',
-    //   component: MyReportsView,
-    //   meta: {
-    //     forAuth: true
-    //   }
-    // },
     {
       path: '/playlists',
       name: 'playlists',
@@ -72,20 +65,15 @@ const router = createRouter({
         forAuth: true
       }
     },
-    // {
-    //   path: '/reports',
-    //   name: 'reports',
-    //   component: ReportsView,
-    //   meta: {
-    //     forAuth: true
-    //   }
-    // }
   ],
 })
 
+router.afterEach((to) => {
+    document.title = to.meta['title'] || 'Studies'
+})
+
 router.beforeResolve(async to => {
-  console.log(to)
-  if (to.meta.forAuth && !localStorage.getItem('user-token')) {
+  if (to.meta['forAuth'] && !localStorage.getItem('user_token')) {
     await router.replace('/')
   }
 })

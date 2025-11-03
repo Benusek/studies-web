@@ -1,13 +1,13 @@
 <script setup>
 import VideoPreview from '@/components/VideoPreview.vue'
-import NotFound from '@/components/NotFound.vue'
+import NotFound from '@/components/Loaders/NotFound.vue'
 
 const props = defineProps({
   videos: Array,
   isEmpty: Boolean,
   isResponse: Boolean,
   isProcessing: Boolean,
-  text:String
+  text: String
 })
 
 const loadVideo = (video, videoElement, canvas = null) => {
@@ -112,9 +112,9 @@ window.onbeforeunload = function() {
 
 <template>
 
-  <NotFound :text="props.text" :isEmpty="props.isEmpty"/>
+  <NotFound :text="props.text" :isEmpty="props.isEmpty" />
   <VideoPreview :videos="videos" :isResponse="props.isResponse"
-                    @mouseleaveVideo="mouseleaveVideo" @playVideo="playVideo" @timeupdateVideo="timeupdateVideo"
-                    @loadVideo="loadVideo" @changeRange="changeRange"
-                    @pauseVideo="pauseVideo" @toggleMutedVideo="toggleMutedVideo" />
+                @mouseleaveVideo="mouseleaveVideo" @playVideo="playVideo" @timeupdateVideo="timeupdateVideo"
+                @loadVideo="loadVideo" @changeRange="changeRange"
+                @pauseVideo="pauseVideo" @toggleMutedVideo="toggleMutedVideo" />
 </template>

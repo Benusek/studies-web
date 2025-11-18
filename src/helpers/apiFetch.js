@@ -1,11 +1,11 @@
 export default async function(method, url, body = null) {
+  const api = import.meta.env.VITE_APP_API
   const options = {
     method,
     headers: {
       Accept: 'application/json'
     }
   }
-
   localStorage.getItem('user_token') ? options.headers.Authorization = `Bearer ${localStorage.getItem('user_token')}` : null
 
   if (body) {
@@ -16,7 +16,7 @@ export default async function(method, url, body = null) {
       options.body = JSON.stringify(body)
     }
   }
-  const response = await fetch('http://videoapi/api'+url, options)
+  const response = await fetch(`${api}/api${url}`, options)
 
   console.log(response)
   if (response.status === 403) {

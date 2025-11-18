@@ -8,6 +8,7 @@ import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import VideoGridView from '@/components/VideoGridView.vue'
 import Loading from '@/components/Loaders/Loading.vue'
 
+const api = import.meta.env.VITE_APP_API
 const route = useRoute()
 const router = useRouter()
 const relativeTime = inject('getRelativeTime')
@@ -34,6 +35,8 @@ const isEmpty = ref(false)
 const video = ref({})
 const author = ref({})
 
+const id = localStorage.getItem('id')
+const token = inject('token')
 onMounted(async () => {
   const result = await apiFetch('GET', `/video/${videoId}`)
   if (result.videos) {
@@ -44,14 +47,16 @@ onMounted(async () => {
   else {
     await router.replace(`/`)
   }
-
-  const result2 = await apiFetch('GET', `/user/${localStorage.getItem('id')}`)
-  if (result2.data) {
-    photo.value = result2.data.photo_file
-    if (result2.data.subscribe.findIndex((obj) => obj.id === author.value.id) !== -1) {
-      author.value.isSubscribe = true
+  if (id) {
+    const result2 = await apiFetch('GET', `/user/${id}`)
+    if (result2.data) {
+      photo.value = result2.data.photo_file
+      if (result2.data.subscribe.findIndex((obj) => obj.id === author.value.id) !== -1) {
+        author.value.isSubscribe = true
+      }
     }
   }
+
 
   const result3 = await apiFetch('GET', `/video/${videoId}/recommendation`)
   if (result3) {
@@ -64,7 +69,7 @@ onMounted(async () => {
   }
 
   await getComments()
-  if (result && result2) {
+  if (result) {
     isResponse.value = true
   }
 })
@@ -136,7 +141,7 @@ const deleteCommentForm = async(comment) => {
     </div>
     <div class="sm:col-span-3 bg-gray-100/20 my-5" v-else>
       <video controls autoplay :class="'w-full'" v-if="video.video_file" muted>
-        <source :src="`http://videoapi/${video.video_file}`" type="video/mp4">
+        <source :src="`${api}/${video.video_file}`" type="video/mp4">
       </video>
       <span class="ps-2 text-lg font-medium">{{ video.title }}</span>
 
@@ -145,7 +150,7 @@ const deleteCommentForm = async(comment) => {
           <div>
             <RouterLink :to="'/channel/' + author.id" class="flex flex-row items-center leading-none flex gap-2">
               <img class="rounded-full w-10 aspect-square"
-                   :src="author.photo_file ? 'http://videoapi/'+ author.photo_file : '/src/assets/default.png' "
+                   :src="author.photo_file ? `${api}/${author.photo_file}` : '/src/assets/default.png' "
                    alt="user">
               <span class="text-sm">{{ author.name }}</span>
             </RouterLink>
@@ -181,7 +186,7 @@ const deleteCommentForm = async(comment) => {
         <span class="pb-2">Комментарии</span>
         <div class="flex flex-row items-center leading-none flex gap-2">
           <img class="rounded-full w-8 aspect-square"
-               :src="photo ? 'http://videoapi/'+ photo : '/src/assets/default.png' "
+               :src="photo ? `${api}/${photo}` : '/src/assets/default.png' "
                alt="user">
           <input type="text" placeholder="Оставить комментарий..." v-model="data.forms.comment.text"
                  class=" border-b border-gray-200 text-sm p-1 w-full focus:border-white">
@@ -195,7 +200,7 @@ const deleteCommentForm = async(comment) => {
         <div v-for="comment in comments">
           <div class="flex gap-2 p-2 items-center">
             <img class="rounded-full w-8 aspect-square"
-                 :src="comment.user.photo_file ? 'http://videoapi/'+ comment.user.photo_file : '/src/assets/default.png' "
+                 :src="comment.user.photo_file ? `${api}/${comment.user.photo_file}` : '/src/assets/default.png' "
                  alt="user">
             <div class=" w-full">
               <div class="flex flex-row text-sm items-center justify-between">
@@ -203,10 +208,13 @@ const deleteCommentForm = async(comment) => {
                   <span>{{ comment.user.name }}</span>
                   <span class="text-xs text-gray-500">{{ comment.created_at }}</span>
                 </div>
-                <div v-if="parseInt(comment.user.id) === parseInt(localStorage.getItem('user_id'))" @click="deleteCommentForm(comment)"
-                     class="py-1 px-2 text-white text-[12px] bg-red-500 rounded-sm cursor-pointer hover:bg-red-600 active:bg-red-700">
-                  <FontAwesomeIcon :icon="faTrash" />
-                </div>
+
+                <template v-if="token">
+                  <div v-if="parseInt(comment.user.id) === parseInt(id)" @click="deleteCommentForm(comment)"
+                       class="py-1 px-2 text-white text-[12px] bg-red-500 rounded-sm cursor-pointer hover:bg-red-600 active:bg-red-700">
+                    <FontAwesomeIcon :icon="faTrash" />
+                  </div>
+                </template>
               </div>
               <span class="text-xs break-words">{{ comment.text }}</span>
             </div>
@@ -226,7 +234,7 @@ const deleteCommentForm = async(comment) => {
           </div>
           <div v-if="comment.isAnswer" class="flex flex-row items-center leading-none flex gap-2 ms-2 mt-2">
             <img class="rounded-full w-4 aspect-square"
-                 :src="photo ? 'http://videoapi/'+ photo : '/src/assets/default.png' "
+                 :src="photo ? `${api}/${photo}` : '/src/assets/default.png' "
                  alt="user">
             <input type="text" placeholder="Оставить ответ..." v-model="data.forms.answer.text"
                    class=" border-b border-gray-200 text-sm p-1 w-full focus:border-white">
@@ -240,7 +248,7 @@ const deleteCommentForm = async(comment) => {
                v-for="answer in comment.answers">
             <div class="flex gap-2 p-2 items-start w-full">
               <img class="rounded-full w-6 aspect-square"
-                   :src="answer.user.photo_file ? 'http://videoapi/'+ answer.user.photo_file : '/src/assets/default.png' "
+                   :src="answer.user.photo_file ? `${api}/${answer.user.photo_file}` : '/src/assets/default.png' "
                    alt="user">
               <div class="w-full overflow-hidden">
                 <div class="flex gap-2 text-sm items-center justify-between">
@@ -265,7 +273,3 @@ const deleteCommentForm = async(comment) => {
 
   </div>
 </template>
-
-<style scoped>
-
-</style>

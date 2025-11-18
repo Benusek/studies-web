@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import Video from '@/components/Loaders/Video.vue'
 import { inject, ref } from 'vue'
 
+const api = import.meta.env.VITE_APP_API
 const props = defineProps({
   isResponse: Boolean,
   videos: Array
@@ -54,7 +55,7 @@ defineEmits(['mouseleaveVideo', 'playVideo', 'timeupdateVideo', 'loadVideo', 'ch
          @mouseenter="$refs.videoElement[index].readyState === 4 ? $emit('playVideo', video, $refs.videoElement[index]) : null"
          class="bg-cover rounded-lg
            w-full bg-black bg-no-repeat h-0 relative" style="padding-top:56.25%;"
-         :style="{'background-image': `url('http://videoapi/${video.photo_file}')`}">
+         :style="{'background-image': `url('${api}/${video.photo_file}')`}">
       <canvas ref="canvas" :class="{'hidden': video.photo_file !== null}"
               class="h-full mx-auto left-0 right-0 top-0 absolute rounded-t-lg"></canvas>
       <div>
@@ -65,7 +66,7 @@ defineEmits(['mouseleaveVideo', 'playVideo', 'timeupdateVideo', 'loadVideo', 'ch
                  @pause="video.isPlaying = false"
                  @playing="video.isPlaying = true"
                  class="absolute top-0 rounded-t-lg h-full bg-contain bg-black w-full">
-            <source :src="`http://videoapi/${video.video_file}`" type="video/mp4" />
+            <source :src="`${api}/${video.video_file}`" type="video/mp4" />
           </video>
           <input type="range" @input="$emit('changeRange', $event, video, $refs.videoElement[index])"
                  @change="$emit('changeRange', $event, video, $refs.videoElement[index])" @click="isNotVideo"
@@ -93,7 +94,7 @@ defineEmits(['mouseleaveVideo', 'playVideo', 'timeupdateVideo', 'loadVideo', 'ch
     <div class="p-2 grid grid-cols-9 gap-1 relative" @click="isVideo">
       <RouterLink :to="'/channel/' + video.user.id">
         <img class="rounded-full w-10 aspect-square"
-             :src="video.user.photo_file ? 'http://videoapi/'+video.user.photo_file : '/src/assets/default.png' "
+             :src="video.user.photo_file ? `${api}/${video.user.photo_file}` : '/src/assets/default.png' "
              alt="user">
       </RouterLink>
       <div class="col-span-7">

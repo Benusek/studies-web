@@ -17,6 +17,8 @@ const loadVideo = (video, videoElement, canvas = null) => {
 }
 
 const timeupdateVideo = (video, videoElement) => {
+  console.log(videoElement)
+  console.log(videoElement.duration)
   if (videoElement) {
     const currentTime = videoElement.currentTime
     video.length = videoElement.duration

@@ -33,13 +33,13 @@ const icons = {
   2: faVuejs,
   3: faN,
   4: faNodeJs,
-  6: faReact,
-  7: faFlutter,
-  8: faGolang,
-  9: faUnity,
-  11: faJava,
+  5: faReact,
+  6: faFlutter,
+  7: faGolang,
+  8: faUnity,
+  9: faJava,
   10: faC,
-  12: faBook
+  11: faBook
 }
 </script>
 

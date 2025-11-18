@@ -22,7 +22,6 @@ const props = defineProps({
   forms: Object
 })
 
-console.log(props.forms)
 const changeFile = (event, key, target) => {
   if (event[target].files.length) {
     form.value.data[key] = event[target].files[0]

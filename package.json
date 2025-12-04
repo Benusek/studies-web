@@ -17,6 +17,7 @@
     "@fortawesome/vue-fontawesome": "^3.0.8",
     "@tailwindcss/vite": "^4.1.16",
     "vue": "^3.5.13",
+    "vue-hls-video-player": "^1.0.1",
     "vue-router": "^4.5.0"
   },
   "devDependencies": {

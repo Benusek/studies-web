@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import VideoGridView from '@/components/VideoGridView.vue'
 import Loading from '@/components/Loaders/Loading.vue'
+import { VideoPlayer } from 'vue-hls-video-player'
 
 const api = import.meta.env.VITE_APP_API
 const route = useRoute()
@@ -43,8 +44,7 @@ onMounted(async () => {
     video.value = JSON.parse(JSON.stringify(result.videos))
     author.value = JSON.parse(JSON.stringify(result.videos.user))
     video.value.created_at = relativeTime(video.value.created_at)
-  }
-  else {
+  } else {
     await router.replace(`/`)
   }
   if (id) {
@@ -56,7 +56,6 @@ onMounted(async () => {
       }
     }
   }
-
 
   const result3 = await apiFetch('GET', `/video/${videoId}/recommendation`)
   if (result3) {
@@ -74,9 +73,8 @@ onMounted(async () => {
   }
 })
 
-const getComments = async() => {
+const getComments = async () => {
   const result = await apiFetch('GET', `/video/${videoId}/comment`)
-
   if (result.comments) {
     comments.value = result.comments
     comments.value.forEach((comment) => {
@@ -88,20 +86,18 @@ const getComments = async() => {
       comment.isAnswer = false
     })
   }
-
   if (result.data) {
     isEmpty.value = true
   }
 }
 
-const FollowingUser = async() => {
-  if(author.value.isSubscribe) {
+const FollowingUser = async () => {
+  if (author.value.isSubscribe) {
     const unfollow = await apiFetch('DELETE', `/user/${author.value.id}/unfollow`)
     if (unfollow) {
       author.value.isSubscribe = false
     }
-  }
-  else {
+  } else {
     const follow = await apiFetch('GET', `/user/${author.value.id}/follow`)
     if (follow) {
       author.value.isSubscribe = true
@@ -109,7 +105,7 @@ const FollowingUser = async() => {
   }
 }
 
-const sendCommentForm = async() => {
+const sendCommentForm = async () => {
   const result = await apiFetch('POST', `/video/${videoId}/comment`, data.value.forms.comment)
   if (result.data) {
     await getComments()
@@ -117,7 +113,7 @@ const sendCommentForm = async() => {
   }
 }
 
-const sendAnswerForm = async(comment) => {
+const sendAnswerForm = async (comment) => {
   const result = await apiFetch('POST', `/comment/${comment.id}/answer`, data.value.forms.answer)
   if (result.data) {
     await getComments()
@@ -125,7 +121,7 @@ const sendAnswerForm = async(comment) => {
   }
 }
 
-const deleteCommentForm = async(comment) => {
+const deleteCommentForm = async (comment) => {
   const result = await apiFetch('DELETE', `/comment/${comment.id}`)
   if (result.data) {
     await getComments()
@@ -137,31 +133,28 @@ const deleteCommentForm = async(comment) => {
 <template>
   <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 w-full">
     <div v-if="!isResponse" class="sm:col-span-3 flex justify-center items-center">
-      <Loading :size="10"/>
+      <Loading :size="10" />
     </div>
     <div class="sm:col-span-3 bg-gray-100/20 my-5" v-else>
-      <video controls autoplay :class="'w-full'" v-if="video.video_file" muted>
-        <source :src="`${api}/${video.video_file}`" type="video/mp4">
-      </video>
+      <VideoPlayer type="default" :link="`${api}/${video.video}`"
+                   :progress="30" :isMuted="false" :isControls="true" class="w-full" />
       <span class="ps-2 text-lg font-medium">{{ video.title }}</span>
-
       <div class="flex justify-between items-center p-3">
         <div class="flex flex-row items-center gap-15">
           <div>
             <RouterLink :to="'/channel/' + author.id" class="flex flex-row items-center leading-none flex gap-2">
               <img class="rounded-full w-10 aspect-square"
-                   :src="author.photo_file ? `${api}/${author.photo_file}` : '/src/assets/default.png' "
-                   alt="user">
+                   :src="author.photo_file ? `${api}/${author.photo_file}` : '/src/assets/default.png'" alt="user">
               <span class="text-sm">{{ author.name }}</span>
             </RouterLink>
           </div>
           <div class="flex flex-row items-center" @click="FollowingUser">
             <div v-if="!author.isSubscribe"
-              class="px-2 py-1 text-xs text-white bg-blue-500 rounded-sm cursor-pointer hover:bg-blue-600 active:bg-blue-700 select-none">
+                 class="px-2 py-1 text-xs text-white bg-blue-500 rounded-sm cursor-pointer hover:bg-blue-600 active:bg-blue-700 select-none">
               Подписаться
             </div>
             <div v-else
-              class="py-1 px-2 text-xs text-red-400 border border-red-400 rounded-sm font-medium cursor-pointer hover:bg-gray-100 active:bg-gray-200/60 select-none">
+                 class="py-1 px-2 text-xs text-red-400 border border-red-400 rounded-sm font-medium cursor-pointer hover:bg-gray-100 active:bg-gray-200/60 select-none">
               Отписаться
             </div>
           </div>
@@ -169,11 +162,10 @@ const deleteCommentForm = async(comment) => {
         </div>
         <div class="flex flex-row gap-3 items-center">
           <div @click="getVideoPlaylistModal(video)"
-            class="text-xs bg-white text-gray-500 px-2 py-1 rounded-lg select-none cursor-pointer border border-gray-400 hover:bg-gray-100 active:bg-gray-200">
+               class="text-xs bg-white text-gray-500 px-2 py-1 rounded-lg select-none cursor-pointer border border-gray-400 hover:bg-gray-100 active:bg-gray-200">
             Добавить в плейлист
           </div>
         </div>
-
       </div>
       <div
         class="flex flex-col border-gray-300 m-2 p-2 relative bg-gray-100 rounded-sm border border-gray-300 shadow-sm">
@@ -185,13 +177,12 @@ const deleteCommentForm = async(comment) => {
       <div class="px-2 flex flex-col">
         <span class="pb-2">Комментарии</span>
         <div class="flex flex-row items-center leading-none flex gap-2">
-          <img class="rounded-full w-8 aspect-square"
-               :src="photo ? `${api}/${photo}` : '/src/assets/default.png' "
+          <img class="rounded-full w-8 aspect-square" :src="photo ? `${api}/${photo}` : '/src/assets/default.png'"
                alt="user">
           <input type="text" placeholder="Оставить комментарий..." v-model="data.forms.comment.text"
                  class=" border-b border-gray-200 text-sm p-1 w-full focus:border-white">
           <div v-if="data.forms.comment.text" @click="sendCommentForm"
-            class="border text-xs py-1 px-2 rounded-lg cursor-pointer border-gray-400 text-gray-500 select-none hover:bg-gray-100 active:bg-gray-200">
+               class="border text-xs py-1 px-2 rounded-lg cursor-pointer border-gray-400 text-gray-500 select-none hover:bg-gray-100 active:bg-gray-200">
             Отправить
           </div>
         </div>
@@ -200,7 +191,7 @@ const deleteCommentForm = async(comment) => {
         <div v-for="comment in comments">
           <div class="flex gap-2 p-2 items-center">
             <img class="rounded-full w-8 aspect-square"
-                 :src="comment.user.photo_file ? `${api}/${comment.user.photo_file}` : '/src/assets/default.png' "
+                 :src="comment.user.photo_file ? `${api}/${comment.user.photo_file}` : '/src/assets/default.png'"
                  alt="user">
             <div class=" w-full">
               <div class="flex flex-row text-sm items-center justify-between">
@@ -220,9 +211,8 @@ const deleteCommentForm = async(comment) => {
             </div>
           </div>
           <div class="flex flex-row gap-2 ms-2">
-            <div
-              @click="comment.isAnswer ? comment.isAnswer = false : comment.isAnswer = true"
-              class="select-none cursor-pointer hover:bg-gray-100/20 rounded-sm active:bg-gray-200/50 w-fit text-xs text-gray-500 p-1 border border-gray-500">
+            <div @click="comment.isAnswer ? comment.isAnswer = false : comment.isAnswer = true"
+                 class="select-none cursor-pointer hover:bg-gray-100/20 rounded-sm active:bg-gray-200/50 w-fit text-xs text-gray-500 p-1 border border-gray-500">
               Ответить
             </div>
             <div v-if="comment.answers.length"
@@ -233,13 +223,12 @@ const deleteCommentForm = async(comment) => {
             </div>
           </div>
           <div v-if="comment.isAnswer" class="flex flex-row items-center leading-none flex gap-2 ms-2 mt-2">
-            <img class="rounded-full w-4 aspect-square"
-                 :src="photo ? `${api}/${photo}` : '/src/assets/default.png' "
+            <img class="rounded-full w-4 aspect-square" :src="photo ? `${api}/${photo}` : '/src/assets/default.png'"
                  alt="user">
             <input type="text" placeholder="Оставить ответ..." v-model="data.forms.answer.text"
                    class=" border-b border-gray-200 text-sm p-1 w-full focus:border-white">
             <div @click="sendAnswerForm(comment)" v-if="data.forms.answer.text"
-              class="border text-xs py-1 px-2 rounded-lg cursor-pointer border-gray-400 text-gray-500 select-none hover:bg-gray-100 active:bg-gray-200">
+                 class="border text-xs py-1 px-2 rounded-lg cursor-pointer border-gray-400 text-gray-500 select-none hover:bg-gray-100 active:bg-gray-200">
               Отправить
             </div>
           </div>
@@ -248,7 +237,7 @@ const deleteCommentForm = async(comment) => {
                v-for="answer in comment.answers">
             <div class="flex gap-2 p-2 items-start w-full">
               <img class="rounded-full w-6 aspect-square"
-                   :src="answer.user.photo_file ? `${api}/${answer.user.photo_file}` : '/src/assets/default.png' "
+                   :src="answer.user.photo_file ? `${api}/${answer.user.photo_file}` : '/src/assets/default.png'"
                    alt="user">
               <div class="w-full overflow-hidden">
                 <div class="flex gap-2 text-sm items-center justify-between">
@@ -260,15 +249,14 @@ const deleteCommentForm = async(comment) => {
                 <span class="text-xs break-words">{{ answer.text }}</span>
               </div>
             </div>
-
           </div>
         </div>
       </div>
-
     </div>
     <div class="mt-5 flex flex-col gap-2" v-if="data.videos">
       <span class="text-lg font-medium f">Похожее</span>
-      <VideoGridView :videos="data.videos" :isResponse="data.isVideoResponse" :isEmpty="false" :isProcessing="false" :text="''" />
+      <VideoGridView :videos="data.videos" :isResponse="data.isVideoResponse" :isEmpty="false" :isProcessing="false"
+                     :text="''" />
     </div>
 
   </div>

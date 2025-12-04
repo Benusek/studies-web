@@ -190,6 +190,7 @@ const getUserData = async (result) => {
   })
 }
 
+//TODO: Перенести в backend при выдаче запроса
 const getRelativeTime = date => {
   let time = new Intl.RelativeTimeFormat(
     'ru', { style: 'long', numeric: 'auto' }

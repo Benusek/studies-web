@@ -10,39 +10,33 @@ const props = defineProps({
   text: String
 })
 
-const loadVideo = (video, videoElement, canvas = null) => {
-  video.photo_file === null ? captureFrameAtTime(5, videoElement, canvas) : null
-  video.length = videoElement.duration
-  setDurationVideo(video, video.length, videoElement)
-}
-
 const timeupdateVideo = (video, videoElement) => {
-  console.log(videoElement)
-  console.log(videoElement.duration)
-  if (videoElement) {
-    const currentTime = videoElement.currentTime
-    video.length = videoElement.duration
-    video.progress = (currentTime / video.length) * 100
-    setDurationVideo(video, video.length - currentTime, videoElement)
-  }
+  // if (videoElement) {
+    // const currentTime = videoElement.currentTime
+    // video.progress = (currentTime / video.duration) * 100
+    // setDurationVideo(video)
+  //TODO: currentTime не работает для hls. Изменить
+    console.log(videoElement.currentTime)
+    // video.progress = (currentTime / video.duration) * 100
+  // }
 }
 
 const mouseleaveVideo = (video, videoElement) => {
-  video.isHover = false
-  video.isMuted = true
+  console.log('Выщел')
+  // video.isHover = false
   videoElement.muted = true
-  videoElement.currentTime = 0
   pauseVideo(video, videoElement)
   if (videoElement.readyState !== 4) {
     return
   }
-  setDurationVideo(video, video.length, videoElement)
-
+  setDurationVideo(video)
 }
 
 const changeRange = (event, video, videoElement) => {
-  videoElement.currentTime = (event.target.value / 100) * video.length
-  playVideo(video, videoElement)
+  video.seconds = ((event.target.value/100) * video.duration)/1000
+  console.log(video.progress)
+  // videoElement.currentTime = (event.target.value / 100) * video.duration
+  // playVideo(video, videoElement)
 }
 
 const pauseVideo = (video, videoElement) => {
@@ -52,37 +46,21 @@ const pauseVideo = (video, videoElement) => {
 }
 
 const playVideo = (video, videoElement) => {
-  video.isHover = true
+  // video.isHover = true
   if (!video.isPlaying && videoElement.paused) {
     videoElement.play()
   }
 }
 
-function captureFrameAtTime(timeInSeconds, videoElement, videoCanvas) {
-  videoElement.currentTime = timeInSeconds
-  videoElement.addEventListener('seeked', function onSeeked() {
-    videoCanvas.width = videoElement.videoWidth
-    videoCanvas.height = videoElement.videoHeight
-    const canvasContext = videoCanvas.getContext('2d')
-    canvasContext.drawImage(videoElement, 0, 0, videoCanvas.width, videoCanvas.height)
-    videoElement.currentTime = 0
-    videoElement.removeEventListener('seeked', onSeeked)
-  })
-}
-
-const setDurationVideo = (video, seconds, videoElement) => {
-  if (videoElement.readyState !== 4) {
-    return
-  }
-
-  const time = {
-    hours: Math.floor(seconds / 3600),
-    minutes: Math.floor(seconds / 60),
-    seconds: Math.floor(seconds % 60)
+const setDurationVideo = (video) => {
+  const time = new function() {
+    this.seconds = Math.abs(Math.floor(video.duration / 1000))
+    this.minutes = Math.abs(Math.floor(this.seconds / 60))
+    this.hours = Math.abs(Math.floor(this.minutes / 60))
   }
 
   for (const key in time) {
-    if (key === 'hours') {
+    if (key.startsWith('hours')) {
       time[key] < 10 && time[key] > 0 ? time[key] = '0' + time[key] : time[key]
       time[key] === 0 ? time[key] = '' : time[key] + ':'
     } else {
@@ -93,12 +71,13 @@ const setDurationVideo = (video, seconds, videoElement) => {
 }
 
 const toggleMutedVideo = (video, videoElement) => {
+  //TODO: muted не работает для hls
   switch (video.isMuted && videoElement.muted) {
     case true:
       video.isMuted = false
       videoElement.muted = false
       break
-    case false:
+    default:
       video.isMuted = true
       videoElement.muted = true
       break
@@ -106,9 +85,9 @@ const toggleMutedVideo = (video, videoElement) => {
 }
 
 
-window.onbeforeunload = function() {
-  window.scrollTo(0, 0)
-}
+// window.onbeforeunload = function() {
+//   window.scrollTo(0, 0)
+// }
 
 </script>
 
@@ -117,6 +96,6 @@ window.onbeforeunload = function() {
   <NotFound :text="props.text" :isEmpty="props.isEmpty" />
   <VideoPreview :videos="videos" :isResponse="props.isResponse"
                 @mouseleaveVideo="mouseleaveVideo" @playVideo="playVideo" @timeupdateVideo="timeupdateVideo"
-                @loadVideo="loadVideo" @changeRange="changeRange"
+                @setDurationVideo="setDurationVideo" @changeRange="changeRange"
                 @pauseVideo="pauseVideo" @toggleMutedVideo="toggleMutedVideo" />
 </template>

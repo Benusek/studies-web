@@ -1,12 +1,11 @@
 <script setup>
 
-import { inject, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import apiFetch from '@/helpers/apiFetch.js'
 import { useRoute } from 'vue-router'
 import VideoGridView from '@/components/VideoGridView.vue'
 import Loading from '@/components/Loaders/Loading.vue'
 
-const relativeTime = inject('getRelativeTime')
 const route = useRoute()
 const data = ref({
   status: {
@@ -26,22 +25,21 @@ if (!data.value.category) {
 }
 
 onMounted(async () => {
-  const result = await apiFetch('GET', `/video/start/${data.value.videos.length}/count/11${data.value.category}`)
+  const result = await apiFetch('GET', `/video/start/${data.value.videos.length}/count/1${data.value.category}`)
   if (result.videos) {
     if (result.videos.length < 11) {
       data.value.status.isUploading = false
     }
-    result.videos.forEach(v => {
-      v.isHover = false
-      v.isMuted = true
-      v.isPlaying = false
-      v.time = null
-      v.progress = Number
-      v.length = Number
-      v.created_at = relativeTime(v.created_at)
-      data.value.videos.push(v)
-    })
-    data.value.status.isResponse = true
+    data.value.videos = result.videos
+    // result.videos.forEach(v => {
+    //   // v.isHover = false
+    //   // v.isMuted = true
+    //   // v.isPlaying = false
+    //   // v.time = null
+    //   v.progress = Number
+    //   v.created_at = relativeTime(v.created_at)
+    //   data.value.videos.push(v)
+    // })
   }
 
   if (result.data) {

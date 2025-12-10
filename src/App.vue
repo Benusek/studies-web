@@ -66,7 +66,7 @@ const forms = [
       },
       {
         label: 'Аватар *',
-        code: 'photo_file',
+        code: 'avatar',
         type: 'file'
       }
     ]
@@ -83,18 +83,18 @@ const forms = [
         type: 'text'
       },
       {
-        label: 'Описание *',
+        label: 'Описание',
         code: 'description',
         type: 'text'
       },
       {
         label: 'Превью *',
-        code: 'photo_file',
+        code: 'thumbnail',
         type: 'file'
       },
       {
         label: 'Видео',
-        code: 'video_file',
+        code: 'video',
         type: 'file'
       },
       {
@@ -154,6 +154,7 @@ onMounted(() => {
     if (token.value) {
       const user = await apiFetch('GET', `/user/${id.value}`)
       await getUserData(user.data)
+      console.log(user)
     }
   })
 })
@@ -183,34 +184,12 @@ const updateToken = (newToken) => {
 }
 
 const getUserData = async (result) => {
+  console.log(result)
   const keys = Object.keys(result)
   keys.forEach(key => {
     data.value.user[key] = result[key]
     !key.includes('subscribe') && !key.includes('subscribers') ? localStorage.setItem(key, result[key]) : null
   })
-}
-
-//TODO: Перенести в backend при выдаче запроса
-const getRelativeTime = date => {
-  let time = new Intl.RelativeTimeFormat(
-    'ru', { style: 'long', numeric: 'auto' }
-  )
-
-  const times = new function() {
-    this.seconds = Math.abs(Math.floor((new Date(date) - new Date()) / 1000))
-    this.minutes = Math.abs(Math.floor(this.seconds / 60))
-    this.hours = Math.abs(Math.floor(this.minutes / 60))
-    this.days = Math.abs(Math.floor(this.hours / 24))
-    this.week = Math.abs(Math.floor(this.days / 24))
-    this.months = Math.abs(Math.floor(this.days / 30))
-    this.years = Math.abs(Math.floor(this.months / 12))
-  }
-
-  for (const key in times) {
-    if (times[key] <= 1) {
-      return time.format(times[key] * -1, key)
-    }
-  }
 }
 
 const process = async (func) => {
@@ -274,7 +253,6 @@ provide('getData', getUserData)
 provide('updateToken', updateToken)
 
 provide('getVideoPlaylistModal', getVideoPlaylistModal)
-provide('getRelativeTime', getRelativeTime)
 
 provide('getFiltered', getFiltered)
 provide('showToast', showToast)

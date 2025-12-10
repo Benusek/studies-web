@@ -7,7 +7,6 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import VideoGridView from '@/components/VideoGridView.vue'
 import Loading from '@/components/Loaders/Loading.vue'
-import { VideoPlayer } from 'vue-hls-video-player'
 
 const api = import.meta.env.VITE_APP_API
 const route = useRoute()
@@ -136,8 +135,8 @@ const deleteCommentForm = async (comment) => {
       <Loading :size="10" />
     </div>
     <div class="sm:col-span-3 bg-gray-100/20 my-5" v-else>
-      <VideoPlayer type="default" :link="`${api}/${video.video}`"
-                   :progress="30" :isMuted="false" :isControls="true" class="w-full" />
+<!--      <VideoPlayer type="default" :link="`${api}/${video.video}`"-->
+<!--                   :progress="30" :isMuted="false" :isControls="true" class="w-full" />-->
       <span class="ps-2 text-lg font-medium">{{ video.title }}</span>
       <div class="flex justify-between items-center p-3">
         <div class="flex flex-row items-center gap-15">

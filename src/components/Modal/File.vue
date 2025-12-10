@@ -18,15 +18,16 @@ defineProps({
     <template class="cursor-pointer border rounded-lg bg-gray-100/20 flex flex-col"
               :class="{'border-green-500 animate-pulse':dragover, 'border-gray-300':!dragover}">
       <input type="file" :id="type" :name="type" class="hidden" ref="input"
-             :accept="type.includes('photo') ? 'image/*' : `${type.split('_')[0]}/*`"
+             :accept="['avatar','thumbnail'].includes(type) ? 'image/*' : 'video/*'"
              @change="$emit('change', $event, type, 'target')">
+
       <template v-if="file[type + 'blob']">
-        <img v-if="type.includes('photo')  && name.includes('Превью')" class="w-full rounded-t-lg object-cover h-30"
+        <img v-if="['thumbnail'].includes(type)" class="w-full rounded-t-lg object-cover h-30"
              :src="file ? file[type + 'blob'] : null" alt="">
         <video v-else-if="type.includes('video')" class="w-full rounded-t-lg object-contain h-30" controls>
           <source :src="file ? file[type + 'blob'] : null" />
         </video>
-        <div v-else-if="type.includes('photo') && name.includes('Аватар')"
+        <div v-else-if="['avatar'].includes(type)"
              class="relative flex flex-row items-end gap-4 justify-center p-2">
           <img v-for="i in 3"
                :src="file[type + 'name'] ? file[type + 'blob'] : '/src/assets/default.png'"

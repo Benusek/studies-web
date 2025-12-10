@@ -2,8 +2,8 @@
 import { faEllipsisVertical, faList, faVolumeHigh, faVolumeXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import Video from '@/components/Loaders/Video.vue'
-import { inject } from 'vue'
-import { VideoPlayer } from 'vue-hls-video-player'
+import { inject, onMounted, ref } from 'vue'
+import Hls from 'hls.js'
 
 const api = import.meta.env.VITE_APP_API
 const props = defineProps({
@@ -26,7 +26,116 @@ const changeMenu = (video) => {
 
 const getVideoPlaylists = inject('getVideoPlaylistModal')
 
-defineEmits(['mouseleaveVideo', 'playVideo', 'timeupdateVideo', 'setDurationVideo', 'changeRange', 'pauseVideo', 'toggleMutedVideo'])
+
+const toggleMutedVideo = (video, videoElement) => {
+  //TODO: muted не работает для hls
+  switch (video.isMuted && videoElement.muted) {
+    case true:
+      video.isMuted = false
+      videoElement.muted = false
+      break
+    default:
+      video.isMuted = true
+      videoElement.muted = true
+      break
+  }
+}
+
+const setDurationVideo = (video) => {
+  const time = new function() {
+    this.seconds = Math.abs(Math.floor(video.duration / 1000))
+    this.minutes = Math.abs(Math.floor(this.seconds / 60))
+    this.hours = Math.abs(Math.floor(this.minutes / 60))
+  }
+
+  for (const key in time) {
+    if (key.startsWith('hours')) {
+      time[key] < 10 && time[key] > 0 ? time[key] = '0' + time[key] : time[key]
+      time[key] === 0 ? time[key] = '' : time[key] + ':'
+    } else {
+      time[key] < 10 ? time[key] = '0' + time[key] : time[key]
+    }
+  }
+  video.time = time['hours'] + time['minutes'] + ':' + time['seconds']
+}
+
+const pauseVideo = (video, videoElement) => {
+  if (video.isPlaying && !videoElement.paused) {
+    videoElement.pause()
+  }
+}
+
+const playVideo = (video, videoElement) => {
+  // video.isHover = true
+  if (!video.isPlaying && videoElement.paused) {
+    videoElement.play()
+  }
+}
+
+const timeupdateVideo = (video, videoElement) => {
+  // if (videoElement) {
+  // const currentTime = videoElement.currentTime
+  // video.progress = (currentTime / video.duration) * 100
+  // setDurationVideo(video)
+  //TODO: currentTime не работает для hls. Изменить
+  // video.progress = (videoElement.currentTime/(video.duration/1000)) * 100
+  // }
+}
+
+const mouseleaveVideo = (video, videoElement) => {
+  console.log('Выщел')
+  // video.isHover = false
+  videoElement.muted = true
+  pauseVideo(video, videoElement)
+  if (videoElement.readyState !== 4) {
+    return
+  }
+  setDurationVideo(video)
+}
+
+const changeRange = (event, video, el) => {
+  // video.seconds = ((videoElement.currentTime/100) * video.duration)/1000
+  console.log(((event.target.value / 100) * video.duration)/1000)
+  console.log(video.duration)
+  console.log(el.duration)
+  console.log('ОООZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ')
+  el.currentTime = ((event.target.value / 100) * video.duration)/1000
+  video.progress = event.target.value
+  // playVideo(video, videoElement)
+}
+
+const loadVideo = (url, el) => {
+  if (Hls.isSupported()) {
+    console.log(1)
+    const hls = new Hls()
+    hls.loadSource(url)
+    hls.attachMedia(el)
+  } else if (el.canPlayType('application/vnd.apple.mpegurl')) {
+    el.src = ''
+    el.addEventListener('loadedmetadata', () => {
+      el.play()
+    })
+  }
+}
+onMounted(() => {
+  console.log(props.videos)
+  props.videos.forEach((video) => {
+    console.log(video)
+    const el = document.getElementById('videoEl')
+    if (Hls.isSupported()) {
+      const hls = new Hls()
+      hls.loadSource(`${api}/${video.video}`)
+      hls.attachMedia(el)
+    } else if (el.canPlayType('application/vnd.apple.mpegurl')) {
+      el.src = ''
+      el.addEventListener('loadedmetadata', () => {
+        el.play()
+      })
+    }
+  })
+  }
+)
+
 
 </script>
 
@@ -36,31 +145,36 @@ defineEmits(['mouseleaveVideo', 'playVideo', 'timeupdateVideo', 'setDurationVide
        :class="{'transition-all duration-150 active:bg-gray-100 active:scale-95': false}">
     {{ video.isHover }}
     <div class="relative">
-      <img v-if="false" @mouseleave="$emit('mouseleaveVideo', video, $refs.videoElement[index])"
-           @mouseenter="$emit('playVideo', video, $refs.videoElement[index])"
+      <img v-if="false" @mouseleave="mouseleaveVideo(video, $refs.video[index])"
+           @mouseenter="playVideo(video, $refs.video)"
            class="bg-cover rounded-lg w-full"
            :src="`${api}/${video['thumbnail']}`" />
 
-      <VideoPlayer v-else :isMuted="true" :isControls="true" ref="videoElement" type="default"
-                   :link="`${api}/${video.video}`" :progress="video.seconds ? video.seconds : 0"
-                   @timeupdate="$emit('timeupdateVideo', video, $refs.videoElement[index])"
-                   @loadeddata="$emit('setDurationVideo', video)"
-                   @pause="video.isPlaying = false" @playing="video.isPlaying = true"
-                   class="rounded-t-lg bg-contain bg-black" />
+      <video v-else controls muted ref="video" id="videoEl" @timeupdate="timeupdateVideo(video, $refs.video[index])">
+        <source/>
+      </video>
 
-      <input type="range" @input="$emit('changeRange', $event, video, $refs.videoElement[index])"
-             @mousedown="$emit('pauseVideo', video, $refs.videoElement[index])"
+      <!--      <VideoPlayer v-else :isMuted="true" :isControls="true" ref="videoElement" type="default"-->
+      <!--                   :link="`${api}/${video.video}`" :progress="video.seconds ? video.seconds : 0"-->
+      <!--                   @timeupdate="$emit('timeupdateVideo', video, $refs.videoElement[index])"-->
+      <!--                   @loadeddata="$emit('setDurationVideo', video)"-->
+      <!--                   @pause="video.isPlaying = false" @playing="video.isPlaying = true"-->
+      <!--                   class="rounded-t-lg bg-contain bg-black" />-->
+
+      <input type="range" @input="changeRange($event, video, $refs.video[index])"
+
              class="[&::-webkit-slider-thumb]:hidden hover:[&::-webkit-slider-thumb]:block
                  h-1 z-1 accent-red-500 outline-none [&::-webkit-slider-thumb]:shadow-orange-400
                  shadow-orange-400 bg-black/20 appearance-none rounded-none  cursor-pointer absolute bottom-0 w-full"
              v-model="video.progress">
+      {{video.progress}}
       <template v-if="video.isMuted">
-        <FontAwesomeIcon @click="$emit('toggleMutedVideo', video, $refs.videoElement[index]);"
+        <FontAwesomeIcon @click="toggleMutedVideo(video, $refs.video[index]);"
                          class="absolute rounded-full top-0 m-2 w-4 right-0 h-1 text-white p-2 font-medium bg-black/50"
                          :icon="faVolumeXmark" />
       </template>
       <template v-else>
-        <FontAwesomeIcon @click="$emit('toggleMutedVideo', video, $refs.videoElement[index]);"
+        <FontAwesomeIcon @click="toggleMutedVideo(video, $refs.video[index]);"
                          class="absolute rounded-full top-0 m-2 w-4 right-0 h-1 text-white p-2 font-medium bg-black/50"
                          :icon="faVolumeHigh" />
       </template>

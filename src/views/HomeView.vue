@@ -3,20 +3,22 @@
 import { onMounted, ref } from 'vue'
 import apiFetch from '@/helpers/apiFetch.js'
 import { useRoute } from 'vue-router'
-import VideoGridView from '@/components/VideoGridView.vue'
 import Loading from '@/components/Loaders/Loading.vue'
+import NotFound from '@/components/Loaders/NotFound.vue'
+import VideoPreview from '@/components/VideoPreview.vue'
 
 const route = useRoute()
 const data = ref({
   status: {
     isResponse: false,
     isUploading: true,
-    isProcessing: false,
-    isEmpty: false
   },
   category: route.params.category,
   videos: []
 })
+
+// isProcessing: false,
+// isEmpty: false
 
 if (!data.value.category) {
   data.value.category = ''
@@ -80,12 +82,12 @@ window.addEventListener('scroll', async () => {
 
 <template>
   <div class="p-3 w-full">
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 h-auto">
-      <VideoGridView :videos="data.videos" :isEmpty="data.status.isEmpty" :isResponse="data.status.isResponse"
-                     :isProcessing="data.status.isProcessing" :text="'Нет видео с данной категорией'" />
-      <div v-if="data.status.isUploading" class="col-span-full h-25 flex justify-center items-center">
-        <Loading :size="10" />
-      </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 h-auto" v-if="data.status.isResponse">
+      <NotFound text="Нет видео с данной категорией" :isEmpty="data.status.isEmpty" />
+      <VideoPreview :videos="data.videos" :isResponse="data.status.isResponse"/>
     </div>
+    <!--      <div v-if="data.status.isUploading" class="col-span-full h-25 flex justify-center items-center">-->
+    <!--        <Loading :size="10" />-->
+    <!--      </div>-->
   </div>
 </template>

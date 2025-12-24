@@ -62,12 +62,11 @@ const sendSearch = async () => {
   <header class="sticky top-0 z-3 select-none">
     <nav class="bg-gray-100">
       <ul class="flex justify-between items-center gap-3 border-b border-gray-200 p-2 w-full">
-        <li class="flex sm:flex flex-row items-center gap-2 cursor-pointer"
+        <li class="flex sm:flex flex-row items-center gap-2 cursor-pointer justify-center"
             :class="{'hidden': header.search.expansions}">
-          <FontAwesomeIcon :icon="faBars" class="text text-xl p-2" @click="$emit('toggle','aside')" />
-          <RouterLink to="/" class="flex flex-row items-center gap-2 cursor-pointer">
-            <p>LOGO</p>
-            <p>Studies</p>
+          <FontAwesomeIcon :icon="faBars" class="text text-md px-4" @click="$emit('toggle','aside')" />
+          <RouterLink to="/" class="flex flex-row items-center gap-1 cursor-pointer">
+            <p class="font-pac">Studies</p>
           </RouterLink>
         </li>
         <li class="flex sm:w-120" :class="{'w-full': header.search.expansions}">
@@ -77,13 +76,12 @@ const sendSearch = async () => {
                   class="sm:hidden items-center justify-center p-2 p-2 w-10 h-10 text-sm font-medium cursor-pointer">
             <FontAwesomeIcon :icon="faArrowLeft" />
           </button>
-          <form @submit.prevent="sendSearch" class="relative w-full h-[33px]">
+          <form @submit.prevent="sendSearch" class="relative w-full font-medium">
             <input v-model="header.search.value" type="search" :class="{'hidden': !header.search.expansions}"
-                   class=" sm:block p-1.5 w-full z-20 text-sm text-gray-900 bg-gray-50 rounded-lg
-              rounded-s-gray-100 border border-gray-300" placeholder="Поиск" />
-            <button type="submit" class="hidden sm:flex items-center absolute top-0 end-0 p-2 h-full text-sm font-medium
-            sm:rounded-e-lg sm:text-white sm:bg-blue-700 sm:border sm:border-blue-700 sm:hover:bg-blue-800
-            cursor-pointer">
+                   class="sm:block p-1.5 ps-3 w-full z-20 text-sm text-gray-500 bg-gray-50 rounded-full
+               border border-gray-300 focus:border-gray-400 outline-none" placeholder="Поиск" />
+            <button type="submit" class="hidden sm:flex items-center absolute top-0 end-0 p-2 w-10 justify-center h-full text-sm
+            sm:rounded-e-full sm:text-white sm:bg-gray-500 sm:hover:bg-gray-500/80 cursor-pointer">
               <FontAwesomeIcon :icon="faSearch" />
             </button>
           </form>
@@ -101,23 +99,23 @@ const sendSearch = async () => {
       </ul>
     </nav>
     <ul v-if="collapse" ref="nav"
-        class="absolute right-0 z-2 rounded-b-xl sm:rounded-bl-xl sm:rounded-br-none shadow-xl w-full sm:w-60 md:w-70 h-auto bg-gray-100 cursor-pointer">
+        class="absolute right-0 z-2 rounded-b-xl sm:rounded-bl-xl sm:rounded-br-none ring-1 ring-gray-200
+        w-full sm:w-60 md:w-70 h-auto bg-gray-100 cursor-pointer">
       <Loading v-if="loading" class="p-2" :size="10" />
       <li v-else-if="token" class="p-3 flex flex-row gap-2">
         <img
           :src="user.photo_file != null ? `http://videoapi/${user.photo_file}` : '/src/assets/default.png'"
-          class="rounded-full w-20 aspect-square text-lg p-2 hidden sm:block" alt="">
+          class="rounded-full shadow-md w-15 aspect-square text-lg m-2 hidden sm:block" alt="">
         <div class="flex flex-col text-lg justify-center rounded-t-xl leading-none gap-1 w-120 sm:w-40">
           <span class="break-words  line-clamp-1">{{ user.name }}</span>
           <div class="flex flex-col">
-            <span class="text-xs text-gray-600 break-words  line-clamp-1">{{ user.login ? '@' + user.login : null
-              }}</span>
+            <span class="text-xs text-gray-600 break-words  line-clamp-1">
+              {{ user.login ? '@' + user.login : null }}
+            </span>
             <span class="text-xs text-gray-600 break-words  line-clamp-1">{{ user.email }}</span>
           </div>
         </div>
       </li>
-
-
       <li v-if="!token"
           class="p-3 border-b border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300"
           @click="$emit('modal', 1)">
@@ -155,7 +153,7 @@ const sendSearch = async () => {
           </div>
         </RouterLink>
       </li>
-      <li v-if="token" class="p-3 hover:bg-gray-200 rounded-b-xl sm:rounded-bl-xl sm:rounded-br-none border-b border-gray-300 hover:bg-gray-200 transition-all duration-100
+      <li v-if="token" class="p-3 hover:bg-gray-200 rounded-b-xl sm:rounded-bl-xl sm:rounded-br-none hover:bg-gray-200 transition-all duration-100
             active:bg-gray-300" @click="logout">
         <FontAwesomeIcon class="flex items-center mr-3" :icon="faArrowRightFromBracket" />
         <span class="col-span-2">Выйти</span>

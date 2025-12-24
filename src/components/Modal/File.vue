@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 
 const dragover = ref(false)
-defineEmits(['change', 'drop'])
+defineEmits(['change'])
 defineProps({
   file: Object,
   type: String,
@@ -13,18 +13,18 @@ defineProps({
 
 <template>
   <label :for="type" @dragover.prevent="dragover = true" @dragleave.prevent="dragover = false"
-         @drop.prevent="$emit('drop', $event, type, 'dataTransfer'); dragover = false">
+         @drop.prevent="$emit('change', $event, type, 'dataTransfer'); dragover = false">
     <span class="select-none text-xs">{{ name }}</span>
     <template class="cursor-pointer border rounded-lg bg-gray-100/20 flex flex-col"
               :class="{'border-green-500 animate-pulse':dragover, 'border-gray-300':!dragover}">
       <input type="file" :id="type" :name="type" class="hidden" ref="input"
              :accept="['avatar','thumbnail'].includes(type) ? 'image/*' : 'video/*'"
              @change="$emit('change', $event, type, 'target')">
-
       <template v-if="file[type + 'blob']">
         <img v-if="['thumbnail'].includes(type)" class="w-full rounded-t-lg object-cover h-30"
-             :src="file ? file[type + 'blob'] : null" alt="">
-        <video v-else-if="type.includes('video')" class="w-full rounded-t-lg object-contain h-30" controls>
+             :src="file ? file[type + 'blob'] : null" alt="thumbnail">
+        <video v-else-if="type.includes('video')" :key="file[type + 'blob']"
+               class="w-full rounded-t-lg object-contain h-30" controls>
           <source :src="file ? file[type + 'blob'] : null" />
         </video>
         <div v-else-if="['avatar'].includes(type)"
@@ -33,7 +33,7 @@ defineProps({
                :src="file[type + 'name'] ? file[type + 'blob'] : '/src/assets/default.png'"
                alt="avatar"
                class="rounded-full aspect-square object-cover border border-gray-200 shadow-md
-        hover:brightness-80 bg-gray-300" :class="`w-${20 - 5 * i} h-${20 - 5 * i}`" />
+               hover:brightness-80 bg-gray-300" :class="`w-${20 - 5 * i} h-${20 - 5 * i}`" />
         </div>
       </template>
 

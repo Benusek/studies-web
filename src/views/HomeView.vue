@@ -5,7 +5,7 @@ import apiFetch from '@/helpers/apiFetch.js'
 import { useRoute } from 'vue-router'
 import Loading from '@/components/Loaders/Loading.vue'
 import NotFound from '@/components/Loaders/NotFound.vue'
-import VideoPreview from '@/components/VideoPreview.vue'
+import VideoPreview from '@/components/Previews/Video.vue'
 
 const route = useRoute()
 const data = ref({
@@ -17,9 +17,6 @@ const data = ref({
   videos: []
 })
 
-// isProcessing: false,
-// isEmpty: false
-
 if (!data.value.category) {
   data.value.category = ''
 } else {
@@ -27,21 +24,12 @@ if (!data.value.category) {
 }
 
 onMounted(async () => {
-  const result = await apiFetch('GET', `/video/start/${data.value.videos.length}/count/1${data.value.category}`)
+  const result = await apiFetch('GET', `/video/start/${data.value.videos.length}/count/12${data.value.category}`)
   if (result.videos) {
     if (result.videos.length < 11) {
       data.value.status.isUploading = false
     }
     data.value.videos = result.videos
-    // result.videos.forEach(v => {
-    //   // v.isHover = false
-    //   // v.isMuted = true
-    //   // v.isPlaying = false
-    //   // v.time = null
-    //   v.progress = Number
-    //   v.created_at = relativeTime(v.created_at)
-    //   data.value.videos.push(v)
-    // })
   }
 
   if (result.data) {
@@ -82,12 +70,9 @@ window.addEventListener('scroll', async () => {
 
 <template>
   <div class="p-3 w-full">
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 h-auto" v-if="data.status.isResponse">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 h-auto">
       <NotFound text="Нет видео с данной категорией" :isEmpty="data.status.isEmpty" />
       <VideoPreview :videos="data.videos" :isResponse="data.status.isResponse"/>
     </div>
-    <!--      <div v-if="data.status.isUploading" class="col-span-full h-25 flex justify-center items-center">-->
-    <!--        <Loading :size="10" />-->
-    <!--      </div>-->
   </div>
 </template>

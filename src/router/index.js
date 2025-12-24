@@ -3,9 +3,9 @@ import HomeView from '../views/HomeView.vue'
 import ChannelView from '@/views/ChannelView.vue'
 import PlaylistsView from '@/views/PlaylistsView.vue'
 import SettingsView from '@/views/SettingsView.vue'
-import SubscribersView from '@/views/SubscribersView.vue'
 import SearchView from '@/views/SearchView.vue'
 import WatchingView from '@/views/WatchingView.vue'
+import PlaylistVideosView from '@/views/PlaylistVideosView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -34,14 +34,6 @@ const router = createRouter({
       component: ChannelView,
     },
     {
-      path: '/subscribers',
-      name: 'subscribers',
-      component: SubscribersView,
-      meta: {
-        forAuth: true
-      }
-    },
-    {
       path: '/settings',
       name: 'settings',
       component: SettingsView,
@@ -64,6 +56,11 @@ const router = createRouter({
       meta: {
         forAuth: true
       }
+    },
+    {
+      path: '/playlist/:id',
+      name: 'playlist',
+      component: PlaylistVideosView,
     },
   ],
 })

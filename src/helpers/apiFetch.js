@@ -18,7 +18,6 @@ export default async function(method, url, body = null) {
   }
   const response = await fetch(`${api}/api${url}`, options)
 
-  console.log(response)
   if (response.status === 403) {
     localStorage.clear()
     window.location.replace('/')

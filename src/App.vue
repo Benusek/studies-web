@@ -103,7 +103,7 @@ const forms = [
         type: 'number'
       },
       {
-        label: 'Приватное',
+        label: 'Публичное',
         code: 'public',
         type: 'checkbox'
       }
@@ -154,7 +154,6 @@ onMounted(() => {
     if (token.value) {
       const user = await apiFetch('GET', `/user/${id.value}`)
       await getUserData(user.data)
-      console.log(user)
     }
   })
 })
@@ -184,7 +183,6 @@ const updateToken = (newToken) => {
 }
 
 const getUserData = async (result) => {
-  console.log(result)
   const keys = Object.keys(result)
   keys.forEach(key => {
     data.value.user[key] = result[key]
@@ -248,6 +246,9 @@ const toggle = (menu) => {
 }
 
 provide('token', computed(() => token.value))
+provide('subscribes', computed(() => data.value.user.subscribe))
+provide('avatar', computed(()=> data.value.user.avatar))
+provide('id', computed(() => id.value))
 provide('role', computed(() => parseInt(data.value.user['role_id'])))
 provide('getData', getUserData)
 provide('updateToken', updateToken)
@@ -275,10 +276,10 @@ const openModal = (num) => {
     <RouterView :key="useRoute().fullPath" />
   </template>
   <transition
-    enter-active-class="transition ease-out duration-300 transform"
+    enter-active-class="transition ease-in-out duration-200 transform"
     enter-from-class="opacity-0"
     enter-to-class="opacity-100"
-    leave-active-class="ease-in duration-200"
+    leave-active-class="ease-in duration-100"
     leave-from-class="opacity-100"
     leave-to-class="opacity-0">
     <Modal v-show="true" v-if="data.modal.active"
@@ -290,6 +291,7 @@ const openModal = (num) => {
       <Form v-else :forms="forms[data.modal.number]" @exit="exit('modal')"/>
     </Modal>
   </transition>
+
   <transition
     enter-active-class="transition ease duration-1000 transform"
     enter-from-class="translate-x-100"

@@ -3,5 +3,5 @@
 </script>
 
 <template>
-Мои подписки
+
 </template>

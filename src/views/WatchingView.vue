@@ -1,130 +1,119 @@
 <script setup>
 
-import { useRoute, useRouter } from 'vue-router'
-import { inject, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { inject, nextTick, onMounted, ref, watch } from 'vue'
 import apiFetch from '@/helpers/apiFetch.js'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
-import VideoGridView from '@/components/VideoGridView.vue'
 import Loading from '@/components/Loaders/Loading.vue'
+import Video from '@/components/Loaders/Video.vue'
+import Hls from 'hls.js'
+import VideoPreview from '@/components/Previews/Video.vue'
 
+const getVideoPlaylistModal = inject('getVideoPlaylistModal')
 const api = import.meta.env.VITE_APP_API
 const route = useRoute()
-const router = useRouter()
-const relativeTime = inject('getRelativeTime')
-const isResponse = ref(false)
-const getVideoPlaylistModal = inject('getVideoPlaylistModal')
-const photo = ref('')
 const videoId = route.params.video
-const data = ref({
-  commentators: [],
-  video: '',
-  forms: {
-    comment: {
-      text: ''
-    },
-    answer: {
-      text: ''
-    }
-  },
-  videos: [],
-  isVideoResponse: false
-})
-const comments = ref([])
-const isEmpty = ref(false)
-const video = ref({})
-const author = ref({})
 
-const id = localStorage.getItem('id')
+const data = ref({
+  comment: {
+    text: ''
+  },
+  answer: {
+    text: ''
+  }
+})
+
 const token = inject('token')
+const subscribes = inject('subscribes')
+const id = inject('id')
+const avatar = inject('avatar')
+
+const isResponse = ref(false)
+const comments = ref([])
+const videoData = ref([])
 onMounted(async () => {
   const result = await apiFetch('GET', `/video/${videoId}`)
-  if (result.videos) {
-    video.value = JSON.parse(JSON.stringify(result.videos))
-    author.value = JSON.parse(JSON.stringify(result.videos.user))
-    video.value.created_at = relativeTime(video.value.created_at)
-  } else {
-    await router.replace(`/`)
-  }
-  if (id) {
-    const result2 = await apiFetch('GET', `/user/${id}`)
-    if (result2.data) {
-      photo.value = result2.data.photo_file
-      if (result2.data.subscribe.findIndex((obj) => obj.id === author.value.id) !== -1) {
-        author.value.isSubscribe = true
-      }
+  if (result) {
+    videoData.value = result
+  } else return
+  if (token && result) {
+    if (subscribes.value && subscribes.value.findIndex((obj) => obj.id === videoData.value.video.user.id) !== -1) {
+      videoData.value.video.user.isSubscribe = true
     }
   }
-
-  const result3 = await apiFetch('GET', `/video/${videoId}/recommendation`)
-  if (result3) {
-    result3.videos.forEach((v) => {
-      v.created_at = relativeTime(v.created_at)
-      console.log(1)
-      data.value.videos.push(v)
-    })
-    data.value.isVideoResponse = true
-  }
-
   await getComments()
-  if (result) {
-    isResponse.value = true
+  isResponse.value = true
+})
+
+watch(isResponse, async (value) => {
+  if (!value) return
+  await nextTick()
+  const player = document.getElementById('playerId')
+  if (Hls.isSupported()) {
+    const hls = new Hls({ autoStartLoad: true })
+    hls.loadSource(`${api}/${videoData.value.video.video}`)
+    hls.attachMedia(player)
+  } else if (player.canPlayType('application/vnd.apple.mpegurl')) {
+    player.src = ''
+    player.addEventListener('loadedmetadata', () => {
+      player.play()
+    })
   }
 })
 
 const getComments = async () => {
   const result = await apiFetch('GET', `/video/${videoId}/comment`)
-  if (result.comments) {
-    comments.value = result.comments
-    comments.value.forEach((comment) => {
-      comment.created_at = relativeTime(comment.created_at)
-      comment.openAnswers = false
-      comment.answers.forEach((a) => {
-        a.created_at = relativeTime(a.created_at)
-      })
-      comment.isAnswer = false
-    })
-  }
-  if (result.data) {
-    isEmpty.value = true
-  }
+  if (result.comments || result.data) comments.value = result.comments
 }
 
+
 const FollowingUser = async () => {
-  if (author.value.isSubscribe) {
-    const unfollow = await apiFetch('DELETE', `/user/${author.value.id}/unfollow`)
-    if (unfollow) {
-      author.value.isSubscribe = false
-    }
+  if (videoData.value.video.user.isSubscribe) {
+    const unfollow = await apiFetch('delete', `/user/${videoData.value.video.user.id}/unfollow`)
+    if (unfollow.status) videoData.value.video.user.isSubscribe = false
   } else {
-    const follow = await apiFetch('GET', `/user/${author.value.id}/follow`)
-    if (follow) {
-      author.value.isSubscribe = true
-    }
+    const follow = await apiFetch('get', `/user/${videoData.value.video.user.id}/follow`)
+    if (follow.status) videoData.value.video.user.isSubscribe = true
   }
 }
 
 const sendCommentForm = async () => {
-  const result = await apiFetch('POST', `/video/${videoId}/comment`, data.value.forms.comment)
+  const result = await apiFetch('POST', `/video/${videoId}/comment`, data.value.comment)
   if (result.data) {
     await getComments()
-    data.value.forms.comment.text = ''
+    data.value.comment.text = ''
   }
 }
 
 const sendAnswerForm = async (comment) => {
-  const result = await apiFetch('POST', `/comment/${comment.id}/answer`, data.value.forms.answer)
+  const result = await apiFetch('POST', `/comment/${comment.id}/answer`, data.value.answer)
   if (result.data) {
     await getComments()
-    data.value.forms.answer.text = ''
+    data.value.answer.text = ''
   }
 }
 
 const deleteCommentForm = async (comment) => {
   const result = await apiFetch('DELETE', `/comment/${comment.id}`)
-  if (result.data) {
-    await getComments()
+  if (result.data.status) await getComments()
+}
+
+const answered = (index) => {
+  switch (comments.value[index].isAnswer) {
+    case true: {
+      comments.value[index].isAnswer = false
+      break
+    }
+    default: {
+      comments.value[index].isAnswer = true
+      break
+    }
   }
+  comments.value.forEach((item, i) => {
+    if (i !== index) item.isAnswer = false
+  })
+  data.value.answer.text = null
 }
 
 </script>
@@ -134,129 +123,145 @@ const deleteCommentForm = async (comment) => {
     <div v-if="!isResponse" class="sm:col-span-3 flex justify-center items-center">
       <Loading :size="10" />
     </div>
-    <div class="sm:col-span-3 bg-gray-100/20 my-5" v-else>
-<!--      <VideoPlayer type="default" :link="`${api}/${video.video}`"-->
-<!--                   :progress="30" :isMuted="false" :isControls="true" class="w-full" />-->
-      <span class="ps-2 text-lg font-medium">{{ video.title }}</span>
-      <div class="flex justify-between items-center p-3">
-        <div class="flex flex-row items-center gap-15">
-          <div>
-            <RouterLink :to="'/channel/' + author.id" class="flex flex-row items-center leading-none flex gap-2">
-              <img class="rounded-full w-10 aspect-square"
-                   :src="author.photo_file ? `${api}/${author.photo_file}` : '/src/assets/default.png'" alt="user">
-              <span class="text-sm">{{ author.name }}</span>
-            </RouterLink>
-          </div>
-          <div class="flex flex-row items-center" @click="FollowingUser">
-            <div v-if="!author.isSubscribe"
-                 class="px-2 py-1 text-xs text-white bg-blue-500 rounded-sm cursor-pointer hover:bg-blue-600 active:bg-blue-700 select-none">
+    <div v-else class="flex flex-col gap-2 p-2 col-span-3">
+      <video controls ref="player" id="playerId" class="aspect-[16/9] bg-black rounded-lg">
+        <source />
+      </video>
+      <span class="text-lg font-medium">{{ videoData.video.title }}</span>
+      <div class="flex flex-row items-center justify-between">
+        <div class="flex gap-2">
+          <RouterLink :to="'/channel/' + videoData.video.user.id"
+                      class="flex flex-row items-top leading-none flex gap-2">
+            <img class="rounded-full w-10 aspect-square"
+                 :src="videoData.video.user.avatar ? `${api}/${videoData.video.user.avatar}` : '/src/assets/default.png'"
+                 alt="user">
+            <div class="flex flex-col">
+              <span class="text-sm font-medium">{{ videoData.video.user.name }}</span>
+              <span
+                class="text-xs font-sans text-gray-500">{{ videoData.video.user.subscribers_count }} подписчиков</span>
+            </div>
+          </RouterLink>
+          <div v-if="videoData.video.user.id !== parseInt(id)" class="flex flex-row items-center font-medium"
+               @click="FollowingUser">
+            <div v-if="!videoData.video.user.isSubscribe"
+                 class="p-1.5 text-xs lg:text-sm text-white bg-gray-500 rounded-xl cursor-pointer hover:bg-gray-600 active:bg-gray-700 select-none">
               Подписаться
             </div>
             <div v-else
-                 class="py-1 px-2 text-xs text-red-400 border border-red-400 rounded-sm font-medium cursor-pointer hover:bg-gray-100 active:bg-gray-200/60 select-none">
+                 class="p-1.25 text-xs lg:text-sm text-red-700 ring ring-red-700 rounded-xl cursor-pointer hover:bg-red-700/5 active:bg-gray-200/60 select-none">
               Отписаться
             </div>
           </div>
+        </div>
+        <div class="flex flex-row gap-3 items-center font-medium">
+          <div @click="getVideoPlaylistModal(videoData)"
+               class="text-xs lg:text-sm text-gray-500 p-1.25 rounded-xl select-none cursor-pointer ring-1 ring-gray-400 hover:bg-gray-200/70 active:bg-gray-200">
+            Сохранить
+          </div>
+        </div>
+      </div>
+      <div class="flex flex-col border-gray-300 p-2 rounded-xl border bg-gray-100">
+        <span class="text-xs text-gray-600 font-medium">Видео добавлено {{ videoData.video.created_at }}</span>
+        <span class="text-sm text-gray-600">{{ videoData.video.description }}</span>
+      </div>
+      <div class="flex flex-col gap-2">
+        <span class=" font-medium text-lg">Комментарии</span>
+        <div class="flex flex-col items-center gap-2">
+          <div class="flex items-center gap-2 w-full">
+            <img class="rounded-full size-8 aspect-square"
+                 :src="avatar ? `${api}/${avatar}` : '/src/assets/default.png'"
+                 alt="user">
+            <input type="text" placeholder="Оставить комментарий..." v-model="data.comment.text"
+                   @keyup.enter="sendCommentForm"
+                   class="outline-none focus:border-b-gray-500 border-b border-gray-200 text-sm p-1 w-full focus:border-white">
+          </div>
 
-        </div>
-        <div class="flex flex-row gap-3 items-center">
-          <div @click="getVideoPlaylistModal(video)"
-               class="text-xs bg-white text-gray-500 px-2 py-1 rounded-lg select-none cursor-pointer border border-gray-400 hover:bg-gray-100 active:bg-gray-200">
-            Добавить в плейлист
+          <div v-if="data.comment.text" class="flex flex-row gap-2 justify-end w-full">
+            <div @click="sendCommentForm"
+                 class="text-xs font-medium lg:text-sm text-gray-500 p-1.25 rounded-xl select-none cursor-pointer ring-1 ring-gray-400 hover:bg-gray-200/70 active:bg-gray-200">
+              Отправить
+            </div>
+            <div @click="data.comment.text = null"
+                 class="text-xs font-medium lg:text-sm text-gray-500 p-1.25 rounded-xl select-none cursor-pointer ring-1 ring-gray-400 hover:bg-gray-200/70 active:bg-gray-200">
+              Отмена
+            </div>
           </div>
         </div>
       </div>
-      <div
-        class="flex flex-col border-gray-300 m-2 p-2 relative bg-gray-100 rounded-sm border border-gray-300 shadow-sm">
-        <span
-          class="text-xs absolute top-[-10px] left-[-1px] text-gray-400 bg-gray-100 rounded-t-sm px-2 border-x border-t border-gray-300 select-none">Описание</span>
-        <span class="text-xs text-gray-600 font-medium">Видео добавлено {{ video.created_at }}</span>
-        <span class="text-sm text-gray-600">{{ video.description }}</span>
-      </div>
-      <div class="px-2 flex flex-col">
-        <span class="pb-2">Комментарии</span>
-        <div class="flex flex-row items-center leading-none flex gap-2">
-          <img class="rounded-full w-8 aspect-square" :src="photo ? `${api}/${photo}` : '/src/assets/default.png'"
-               alt="user">
-          <input type="text" placeholder="Оставить комментарий..." v-model="data.forms.comment.text"
-                 class=" border-b border-gray-200 text-sm p-1 w-full focus:border-white">
-          <div v-if="data.forms.comment.text" @click="sendCommentForm"
-               class="border text-xs py-1 px-2 rounded-lg cursor-pointer border-gray-400 text-gray-500 select-none hover:bg-gray-100 active:bg-gray-200">
-            Отправить
-          </div>
-        </div>
-      </div>
-      <div v-if="comments">
-        <div v-for="comment in comments">
-          <div class="flex gap-2 p-2 items-center">
-            <img class="rounded-full w-8 aspect-square"
-                 :src="comment.user.photo_file ? `${api}/${comment.user.photo_file}` : '/src/assets/default.png'"
+      <ul v-for="(comment, index) in comments" class="flex flex-col gap-2.5">
+        <li class="flex flex-col gap-2">
+          <div class="flex gap-2 items-center">
+            <img class="rounded-full size-8 aspect-square"
+                 :src="comment.user.avatar ? `${api}/${comment.user.avatar}` : '/src/assets/default.png'"
                  alt="user">
             <div class=" w-full">
               <div class="flex flex-row text-sm items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <span>{{ comment.user.name }}</span>
-                  <span class="text-xs text-gray-500">{{ comment.created_at }}</span>
+                <div class="flex items-center gap-2 text-xs">
+                  <span class="font-medium">{{ comment.user.name }}</span>
+                  <span class="text-gray-500">{{ comment.created_at }}</span>
                 </div>
-
-                <template v-if="token">
-                  <div v-if="parseInt(comment.user.id) === parseInt(id)" @click="deleteCommentForm(comment)"
-                       class="py-1 px-2 text-white text-[12px] bg-red-500 rounded-sm cursor-pointer hover:bg-red-600 active:bg-red-700">
-                    <FontAwesomeIcon :icon="faTrash" />
-                  </div>
-                </template>
+                <div v-if="token && parseInt(comment.user.id) === parseInt(id)" @click="deleteCommentForm(comment)"
+                     class="py-1.5 px-2.25 text-gray-600 text-xs rounded-full cursor-pointer active:text-white hover:text-red-700 hover:inset-ring-1 hover:ring-red-700 active:bg-red-600">
+                  <FontAwesomeIcon :icon="faTrash" />
+                </div>
               </div>
               <span class="text-xs break-words">{{ comment.text }}</span>
             </div>
           </div>
-          <div class="flex flex-row gap-2 ms-2">
-            <div @click="comment.isAnswer ? comment.isAnswer = false : comment.isAnswer = true"
-                 class="select-none cursor-pointer hover:bg-gray-100/20 rounded-sm active:bg-gray-200/50 w-fit text-xs text-gray-500 p-1 border border-gray-500">
+          <div class="flex flex-row gap-2">
+            <div @click="answered(index)"
+                 class="text-xs font-medium text-gray-500 p-1.25 rounded-xl select-none cursor-pointer ring-1 ring-gray-400 hover:bg-gray-200/70 active:bg-gray-200">
               Ответить
             </div>
             <div v-if="comment.answers.length"
-                 class="select-none cursor-pointer hover:bg-gray-100/20 rounded-sm active:bg-gray-200/50 w-fit text-xs text-blue-500 font-medium p-1 border border-blue-500"
+                 class="text-xs font-medium text-blue-500 p-1.25 rounded-xl select-none cursor-pointer ring-1 ring-blue-400 hover:bg-blue-100/30 active:bg-blue-100"
                  @click="comment.openAnswers ? comment.openAnswers = false : comment.openAnswers = true">
               <span v-if="!comment.openAnswers">Ответы</span>
               <span v-else>Свернуть</span>
             </div>
           </div>
-          <div v-if="comment.isAnswer" class="flex flex-row items-center leading-none flex gap-2 ms-2 mt-2">
-            <img class="rounded-full w-4 aspect-square" :src="photo ? `${api}/${photo}` : '/src/assets/default.png'"
-                 alt="user">
-            <input type="text" placeholder="Оставить ответ..." v-model="data.forms.answer.text"
-                   class=" border-b border-gray-200 text-sm p-1 w-full focus:border-white">
-            <div @click="sendAnswerForm(comment)" v-if="data.forms.answer.text"
-                 class="border text-xs py-1 px-2 rounded-lg cursor-pointer border-gray-400 text-gray-500 select-none hover:bg-gray-100 active:bg-gray-200">
+        </li>
+        <li v-if="comment.isAnswer" class="flex flex-col gap-2 ms-6">
+          <div class="flex gap-2 w-full items-center">
+            <img class="rounded-full size-6 aspect-square"
+                 :src="avatar ? `${api}/${avatar}` : '/src/assets/default.png'" alt="user">
+            <input type="text" placeholder="Оставить ответ..." v-model="data.answer.text"
+                   @keyup.enter="sendAnswerForm(comment)"
+                   class="outline-none focus:border-b-gray-500 border-b border-gray-200 text-sm p-1 w-full focus:border-white">
+          </div>
+          <div class="flex gap-2 w-full justify-end">
+            <div @click="sendAnswerForm(comment)"
+                 class="text-[10px] font-medium lg:text-xs text-gray-500 p-1.25 rounded-xl select-none cursor-pointer ring-1 ring-gray-400 hover:bg-gray-200/70 active:bg-gray-200">
               Отправить
             </div>
-          </div>
-
-          <div v-if="comment.answers && comment.openAnswers" class="ms-5 flex flex-row w-full"
-               v-for="answer in comment.answers">
-            <div class="flex gap-2 p-2 items-start w-full">
-              <img class="rounded-full w-6 aspect-square"
-                   :src="answer.user.photo_file ? `${api}/${answer.user.photo_file}` : '/src/assets/default.png'"
-                   alt="user">
-              <div class="w-full overflow-hidden">
-                <div class="flex gap-2 text-sm items-center justify-between">
-                  <div class="flex gap-2 items-center">
-                    <span>{{ answer.user.name }}</span>
-                    <span class="text-xs text-gray-500">{{ answer.created_at }}</span>
-                  </div>
-                </div>
-                <span class="text-xs break-words">{{ answer.text }}</span>
-              </div>
+            <div @click="data.answer.text = null; comment.isAnswer = false"
+                 class="text-[10px] font-medium lg:text-xs text-gray-500 p-1.25 rounded-xl select-none cursor-pointer ring-1 ring-gray-400 hover:bg-gray-200/70 active:bg-gray-200">
+              Отмена
             </div>
           </div>
-        </div>
-      </div>
+        </li>
+        <li v-if="comment.answers && comment.openAnswers" class="ms-6 flex flex-row w-full"
+            v-for="answer in comment.answers">
+          <div class="flex gap-2 items-start w-full">
+            <img class="rounded-full size-6 aspect-square"
+                 :src="answer.user.avatar ? `${api}/${answer.user.avatar}` : '/src/assets/default.png'"
+                 alt="user">
+            <div class="w-full overflow-hidden">
+              <div class="flex gap-2 text-sm items-center justify-between">
+                <div class="flex gap-2 items-center text-[10px]">
+                  <span class="font-medium">{{ answer.user.name }}</span>
+                  <span class="text-gray-500">{{ answer.created_at }}</span>
+                </div>
+              </div>
+              <span class="text-xs break-words">{{ answer.text }}</span>
+            </div>
+          </div>
+        </li>
+      </ul>
     </div>
-    <div class="mt-5 flex flex-col gap-2" v-if="data.videos">
-      <span class="text-lg font-medium f">Похожее</span>
-      <VideoGridView :videos="data.videos" :isResponse="data.isVideoResponse" :isEmpty="false" :isProcessing="false"
-                     :text="''" />
+    <div class="flex flex-col gap-2 px-2 pt-2" v-if="!isResponse || videoData.recommendations.length">
+      <span class="text-lg font-medium">Похожее</span>
+      <VideoPreview :videos="videoData.recommendations" :isResponse="isResponse" />
     </div>
-
   </div>
 </template>

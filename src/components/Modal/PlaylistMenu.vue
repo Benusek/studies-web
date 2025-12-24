@@ -19,7 +19,7 @@ defineProps({
             @click="$emit('change', playlist)" :disabled="loading"
             :class="{'bg-indigo-500 active:bg-indigo-700 hover:bg-indigo-600': playlist.active}"
             class="sm:w-auto rounded-lg bg-blue-500 active:bg-blue-700 hover:bg-blue-600
-              cursor-pointer select-none p-2 font-medium text-sm text-white line-clamp-1 break-words text-start
+              cursor-pointer select-none p-1 font-medium text-sm leading-snug text-white line-clamp-1 break-words text-start
               shadow border-2">
       {{ playlist.title }}
     </button>

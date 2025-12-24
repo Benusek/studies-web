@@ -1,17 +1,15 @@
 <script setup>
 
-import { faArrowDown, faArrowUp, faBook, faC, faGear, faList, faN } from '@fortawesome/free-solid-svg-icons'
-import { inject, ref } from 'vue'
 import {
-  faFlutter,
-  faGolang,
-  faJava,
-  faNodeJs,
-  faReact,
-  faUnity,
-  faVuejs,
-  faWpforms
-} from '@fortawesome/free-brands-svg-icons'
+  faArrowDown,
+  faArrowRight,
+  faArrowUp,
+  faChevronRight,
+  faGear,
+  faList,
+  faUserCircle
+} from '@fortawesome/free-solid-svg-icons'
+import { inject, ref } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 defineProps({
@@ -21,81 +19,74 @@ defineProps({
   subscribe: Array
 })
 
+const api = import.meta.env.API
 const token = inject('token')
+const id = inject('id')
 const getFiltered = inject('getFiltered')
 const aside = ref({
   query: '',
   collapse: true
 })
-
-const icons = {
-  1: faWpforms,
-  2: faVuejs,
-  3: faN,
-  4: faNodeJs,
-  5: faReact,
-  6: faFlutter,
-  7: faGolang,
-  8: faUnity,
-  9: faJava,
-  10: faC,
-  11: faBook
-}
 </script>
 
 <template>
-  <aside class="z-2 bg-gray-50/45 z-2 min-w-20 break-words transition-all">
+  <aside class="z-2 break-words font-medium transition-all duration-500">
     <div
-      class="sticky justify-center top-16 sm:h-[calc(100vh-4rem)] overflow-auto sm:flex w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]
-            transition-all duration-200"
-      :class="{'sm:w-20': collapse, 'hidden': collapse}">
-      <ul>
-        <li>
-          <RouterLink to="/" :class="{'flex justify-center': collapse}">
-            <p class="font-medium text-sm py-2 cursor-pointer transition-all duration-200"
-               :class="!collapse ? 'ps-4' : 'text-xs'">
+      class="sticky justify-center top-16 sm:h-[calc(100vh-4rem)] overflow-auto sm:flex w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+      :class="{'': collapse, 'hidden': collapse}">
+      <ul class="flex flex-col pt-3.5 gap-10">
+        <li v-if="!collapse">
+          <RouterLink to="/">
+            <p class="text-md cursor-pointer ps-3.5">
               Категории
             </p>
           </RouterLink>
-          <div class="px-3 py-2" v-if="!collapse">
-            <input v-model="aside.query" type="text" placeholder="Введите категорию"
-                   @input=""
-                   class="bg-white text-xs rounded-lg border border-gray-300 p-1 w-full">
+          <div class="p-3">
+            <input v-model="aside.query" type="text" placeholder="Категория"
+                   class="bg-white text-xs rounded-full border border-gray-300 p-1.5 w-full focus:border-gray-400 outline-none">
           </div>
-          <div :class="{'flex flex-col gap-2' : collapse}">
-            <div v-for="category in getFiltered(categories['all'], categories['current'], aside.query)"
-                 class="transition-all duration-100 hover:bg-gray-100 active:bg-gray-200
-                 border-b border-gray-500/10 font-sans cursor-pointer"
-                 :class="!collapse ? '' : 'shadow-sm rounded-sm mt-2'">
-              <RouterLink :to="`/category/${category.id}`" class="flex gap-3 min-w-10 text-xs p-2">
-                <FontAwesomeIcon :icon="icons[`${category.id}`]" class="text-lg ms-3" />
-                <span v-if="!collapse">{{ category.name }}</span>
-              </RouterLink>
-            </div>
+          <div v-for="category in getFiltered(categories['all'], categories['current'], aside.query)"
+               class="hover:bg-gray-200/60 active:bg-gray-200 cursor-pointer rounded-lg">
+            <RouterLink :to="`/category/${category.id}`" class="flex min-w-10 max-w-35 text-xs ps-5 py-1">
+              <span class="break-words line-clamp-1">{{ category.name }}</span>
+            </RouterLink>
           </div>
         </li>
-        <li v-if="token && role === 1">
-          <RouterLink to="/" class="cursor-pointer" :class="{'flex justify-center': collapse}">
-            <p class="font-medium text-sm pt-4 pb-3" :class="!collapse ? 'ps-4' : 'text-xs'">Ваш канал</p>
-          </RouterLink>
-          <RouterLink to="/playlists" :class="!collapse ? 'shadow-xs' : 'shadow-sm rounded-sm mt-2'"
-                      class="flex items-center p-2 cursor-pointer hover:bg-gray-100 gap-3 transition-all duration-100 active:bg-gray-200">
-            <FontAwesomeIcon :icon="faList" class="ms-3" />
-            <p v-if="!collapse" class="text-xs">Плейлисты</p>
-          </RouterLink>
+        <li v-if="token && role === 1" class="flex flex-col gap-1">
+            <RouterLink :to="`/channel/${id}`"
+                        class="rounded-lg flex items-center p-2 cursor-pointer hover:bg-gray-200/60 active:bg-gray-200"
+                        :class="{'flex-col gap-1' : collapse, 'gap-3 ps-4': !collapse}">
+              <FontAwesomeIcon :icon="faUserCircle" />
+              <p :class="{'text-[8px]': collapse}" class="text-xs text-center">Вы</p>
+            </RouterLink>
+
+            <RouterLink to="/playlists"
+                        class="rounded-lg flex items-center p-2 cursor-pointer hover:bg-gray-200/60 active:bg-gray-200"
+                        :class="{'flex-col gap-1' : collapse, 'gap-3 ps-4': !collapse}">
+              <FontAwesomeIcon :icon="faList" />
+              <p :class="{'text-[8px]': collapse}" class="text-xs text-center">Плейлисты</p>
+            </RouterLink>
+
+
+            <RouterLink to="/settings/"
+                        class="flex items-center p-2 cursor-pointer hover:bg-gray-200/60 active:bg-gray-200 rounded-lg"
+                        :class="{'flex-col gap-1' : collapse, 'gap-3 ps-4': !collapse}">
+              <FontAwesomeIcon :icon="faGear" />
+              <p :class="{'text-[8px]': collapse}" class="text-xs text-center">Личный кабинет</p>
+            </RouterLink>
         </li>
-        <li v-if="token && role === 1">
+        <li v-if="token && role === 1 && subscribe.length" class="flex flex-col gap-1">
           <RouterLink to="/subscribers" class="cursor-pointer"
                       :class="{'flex justify-center': collapse}">
-            <p class="font-medium text-sm pt-4 pb-3" :class="collapse ? 'text-xs' : 'ps-4'">
+            <p class="text-md" :class="collapse ? 'text-[10px]' : 'ps-3.5'">
               Подписки</p>
           </RouterLink>
           <div v-for="sub in aside.collapse?subscribe.slice(0, 3):subscribe">
-            <RouterLink :to="'/channel/' + sub.id" class="flex flex-row text-xs items-center break-words overflow-hidden line-clamp-1 sm:w-full hover:bg-gray-100
-                    transition-all duration-100 active:bg-gray-200">
-              <img :src="sub.photo_file ? 'http://videoapi/' + sub.photo_file : '/src/assets/default.png'" alt=""
-                   class="ms-2 rounded-full aspect-square w-10 text-lg p-2">
-              <span class="w-20 break-words line-clamp-1 hover:bg-"
+            <RouterLink :to="'/channel/' + sub.id" class="flex flex-row text-xs gap-2 items-center break-words overflow-hidden line-clamp-1 hover:bg-gray-100 p-1 rounded-lg"
+                        :class="{'justify-center': collapse, 'gap-3 ps-4': !collapse}">
+              <img :src="sub.avatar ? api + sub.avatar : '/src/assets/default.png'" alt="avatar"
+                   class="rounded-full aspect-square text-lg w-7">
+              <span class="break-words line-clamp-1"
                     v-if="!collapse">{{ sub.name }}</span>
             </RouterLink>
           </div>
@@ -106,25 +97,14 @@ const icons = {
             <span v-if="!collapse">Развернуть</span>
           </div>
           <div v-else-if="!aside.collapse && subscribe.length > 3" @click="aside.collapse = true"
-               :class="!collapse ? 'shadow-xs' : 'shadow-sm rounded-sm mt-2'" class="flex flex-row p-2 border-b border-gray-200/80 hover:bg-gray-100
+               :class="{'rounded-sm mt-2' : collapse}" class="flex flex-row p-2 border-b border-gray-200/80 hover:bg-gray-100
                            text-xs font-sans cursor-pointer gap-3 items-center transition-all duration-100 active:bg-gray-200">
             <FontAwesomeIcon :icon="faArrowUp" class="text-md ms-4" />
             <span v-if="!collapse">Свернуть</span>
           </div>
         </li>
         <li v-if="token && role === 1" class="pb-10">
-          <div class="cursor-default" :class="{'flex justify-center': collapse}">
-            <p class="font-medium text-sm pt-4 pb-3"
-               :class="{'text-xs': collapse, 'ps-4': !collapse}">Прочее</p>
-          </div>
-          <div :class="{'flex flex-col gap-2' : collapse}">
-            <RouterLink to="/settings/"
-                        class="flex items-center p-2 cursor-pointer border-b border-gray-500/10 hover:bg-gray-100 gap-3 transition-all duration-100 active:bg-gray-200"
-                        :class="!collapse ? 'shadow-xs' : 'shadow-sm rounded-sm'">
-              <FontAwesomeIcon :icon="faGear" class="ms-3" />
-              <p v-if="!collapse" class="text-xs">Настройки</p>
-            </RouterLink>
-          </div>
+
         </li>
       </ul>
     </div>

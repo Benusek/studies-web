@@ -9,6 +9,10 @@ import Aside from '@/components/Bars/Aside.vue'
 import PlaylistMenu from '@/components/Modal/PlaylistMenu.vue'
 import { useRoute } from 'vue-router'
 
+const categories = ref({
+  all: [],
+  current: []
+})
 const forms = [
   {
     label: 'Авторизация',
@@ -100,7 +104,8 @@ const forms = [
       {
         label: 'Категория *',
         code: 'category_id',
-        type: 'number'
+        type: 'select',
+        options: []
       },
       {
         label: 'Публичное',
@@ -139,16 +144,16 @@ const data = ref({
   playlists: []
 })
 
-const categories = ref({
-  all: [],
-  current: []
-})
-
 onMounted(() => {
   process(async () => {
     const response = await apiFetch('GET', `/category`)
     if (response) {
       categories.value.all = categories.value.current = response
+      forms[2].inputs[4].options = categories.value.all.map(category => ({
+            value: category.id,
+            label: category.name
+          })
+      )
     }
 
     if (token.value) {
@@ -245,8 +250,12 @@ const toggle = (menu) => {
   data.value[menu] ? data.value[menu] = false : data.value[menu] = true
 }
 
+const storeLink = (num) => {
+  data.value.menu.active = false
+  data.value.modal.number = num
+}
+
 provide('token', computed(() => token.value))
-provide('subscribes', computed(() => data.value.user.subscribe))
 provide('avatar', computed(()=> data.value.user.avatar))
 provide('id', computed(() => id.value))
 provide('role', computed(() => parseInt(data.value.user['role_id'])))
@@ -257,6 +266,7 @@ provide('getVideoPlaylistModal', getVideoPlaylistModal)
 
 provide('getFiltered', getFiltered)
 provide('showToast', showToast)
+provide('link', storeLink)
 
 const exit = (key) => {
   data.value[key].active = false

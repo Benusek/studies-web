@@ -76,11 +76,11 @@ const aside = ref({
             </RouterLink>
         </li>
         <li v-if="token && role === 1 && subscribe.length" class="flex flex-col gap-1">
-          <RouterLink to="/subscribers" class="cursor-pointer"
+          <span class="cursor-pointer"
                       :class="{'flex justify-center': collapse}">
             <p class="text-md" :class="collapse ? 'text-[10px]' : 'ps-3.5'">
               Подписки</p>
-          </RouterLink>
+          </span>
           <div v-for="sub in aside.collapse?subscribe.slice(0, 3):subscribe">
             <RouterLink :to="'/channel/' + sub.id" class="flex flex-row text-xs gap-2 items-center break-words overflow-hidden line-clamp-1 hover:bg-gray-100 p-1 rounded-lg"
                         :class="{'justify-center': collapse, 'gap-3 ps-4': !collapse}">

@@ -5,7 +5,8 @@ import apiFetch from '@/helpers/apiFetch.js'
 import { useRoute } from 'vue-router'
 import Loading from '@/components/Loaders/Loading.vue'
 import NotFound from '@/components/Loaders/NotFound.vue'
-import VideoPreview from '@/components/Previews/Video.vue'
+import VideoPreview from '@/components/Previews/VideoCard.vue'
+import VideoCard from "@/components/Previews/VideoCard.vue";
 
 const route = useRoute()
 const data = ref({
@@ -72,7 +73,7 @@ window.addEventListener('scroll', async () => {
   <div class="p-3 w-full">
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 h-auto">
       <NotFound text="Нет видео с данной категорией" :isEmpty="data.status.isEmpty" />
-      <VideoPreview :videos="data.videos" :isResponse="data.status.isResponse"/>
+      <VideoCard :videos="data.videos" :isResponse="data.status.isResponse" />
     </div>
   </div>
 </template>

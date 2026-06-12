@@ -32,7 +32,7 @@ const changeFile = (event, key, target) => {
     form.value.data[key] = event[target].files[0]
     form.value.data[key + 'name'] = event[target].files[0].name
     if (form.value.data[key + 'blob']) URL.revokeObjectURL(form.value.data[key + 'blob'])
-    form.value.data[key + 'blob'] = URL.createObjectURL(event[target].files[0])
+      form.value.data[key + 'blob'] = URL.createObjectURL(event[target].files[0])
   }
 }
 
@@ -45,15 +45,18 @@ const post = async () => {
   for (const key in form.value.data) {
     if (form.value.data[key]) {
       formData.append(key, form.value.data[key])
+      console.log(key, form.value.data[key])
     }
   }
 
   switch (props.forms['route']) {
     case '/video': {
       formData.delete('video')
-      //TODO: Incorrect int value "true" in database - Radio only true or false
-      formData.append('public', 1)
+      if (formData.get('public')) {
+        formData.append('public', 1)
+      } else formData.append('public', 0)
       const result = await apiFetch('POST', '/meta', formData)
+      console.log(formData.get('category_id'))
 
       if (result.errors) {
         form.value.errors = result['errors']
@@ -77,7 +80,19 @@ const post = async () => {
         form.value.progress = Math.floor(file.progress(true) * 100)
       })
       r.on('fileError', function(file, err) {
-        form.value.errors = JSON.parse(err)['errors']
+        try {
+          const response = JSON.parse(err)
+
+          form.value.errors = response.errors || {
+            common: [response.message || 'Ошибка загрузки']
+          }
+        } catch {
+          form.value.errors = {
+            common: ['Внутренняя ошибка сервера']
+          }
+        }
+
+        console.error(err)
       })
       r.on('chunkingError', function(file, message) {
         console.error('Chunk error:', message)
@@ -120,19 +135,36 @@ const exit = (message) => {
 <template>
   <form @submit.prevent="post()" class="flex flex-col gap-4 grid grid-cols-1 md:grid-cols-2">
     <li v-for="input in forms.inputs" class="relative flex flex-col" :class="{'col-span-full': input.type.includes('file')}">
-      <div v-if="!input.type.includes('file')"
-           :class="{'flex justify-around border border-gray-300 rounded-lg p-1.5':input.type.includes('checkbox')}">
-        <label
-          :for="input.code" class="text-gray-500 select-none cursor-text"
-          :class="{'text-red-600/70': form.errors[input.code], 'top-[-18px] px-1 text-xs ': form.data[input.code] && !input.type.includes('checkbox'),
-          'peer-focus:text-xs peer-focus:top-[-18px] peer-focus:px-1 transition-all duration-300 absolute top-1.5 left-2': !input.type.includes('checkbox'),
-          '': input.type.includes('checkbox')}">
+      <div
+          v-if="!input.type.includes('file')"
+          :class="{
+    'flex justify-around border border-gray-300 rounded-lg p-1.5':
+      input.type.includes('checkbox')}">
+        <label :for="input.code" class="text-gray-500 select-none cursor-text" :class="{ 'text-red-600/70': form.errors[input.code], 'top-[-18px] px-1 text-xs': form.data[input.code] && !input.type.includes('checkbox'),
+      'peer-focus:text-xs peer-focus:top-[-18px] peer-focus:px-1 transition-all duration-300 absolute top-1.5 left-2': !input.type.includes('checkbox'), '': input.type.includes('checkbox')}">
           {{ input.label }}
-        </label>
-        <input v-model="form.data[input.code]" :type="input.type" :id="input.code"
-               class="border border-gray-300 rounded-lg p-1.5 bg-gray-100/20"
-               :class="{'border border-red-600/70': form.errors[input.code], 'w-auto': input.type.includes('checkbox'), 'peer w-full':!input.type.includes('checkbox')}"
-               :autocomplete="input.type.includes('password')?'on':null">
+      </label>
+        <select
+            v-if="input.type === 'select'"
+            v-model="form.data[input.code]"
+            :id="input.code"
+            class="peer w-full border border-gray-300 rounded-lg p-1.5 bg-gray-100/20"
+            :class="{ 'border-red-600/70': form.errors[input.code] }">
+          <option value="" disabled>Выберите категорию</option>
+          <option
+              v-for="option in input.options"
+              :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+        <input
+            v-else
+            v-model="form.data[input.code]"
+            :type="input.type"
+            :id="input.code"
+            class="border border-gray-300 rounded-lg p-1.5 bg-gray-100/20"
+            :class="{'border border-red-600/70': form.errors[input.code], 'w-auto': input.type.includes('checkbox'), 'peer w-full': !input.type.includes('checkbox')}"
+            :autocomplete="input.type.includes('password') ? 'on' : null">
       </div>
       <File v-else :file="form.data" :type="input.code" :name="input.label" @change="changeFile"/>
       <Error :errors="form.errors[input.code]" />
@@ -147,7 +179,7 @@ const exit = (message) => {
       </div>
     </div>
     <button :disabled="form.isProcess"
-            class=" relative h-8 w-full bg-blue-500 rounded-xl p-1 text-white font-medium cursor-pointer hover:bg-blue-400 flex justify-center md:col-span-2 lg:col-span-full">
+            class=" relative h-8 w-full bg-zinc-600 rounded-xl p-1 text-white font-medium cursor-pointer hover:bg-zinc-700 flex justify-center md:col-span-2 lg:col-span-full">
       <span v-if="!form.isProcess">{{ forms['submit'] }}</span>
       <Loading v-else :size="6" />
     </button>

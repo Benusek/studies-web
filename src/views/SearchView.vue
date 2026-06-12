@@ -12,7 +12,7 @@ import {
   faXmark
 } from '@fortawesome/free-solid-svg-icons'
 import PlaylistPreview from '@/components/Previews/Playlist.vue'
-import VideoPreview from '@/components/Previews/Video.vue'
+import VideoPreview from '@/components/Previews/VideoCard.vue'
 import NotFound from '@/components/Loaders/NotFound.vue'
 
 const getFiltered = inject('getFiltered')

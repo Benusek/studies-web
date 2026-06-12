@@ -18,10 +18,10 @@ defineProps({
         <FontAwesomeIcon :icon="faXmark" class="cursor-pointer hover:text-black/60 text-end"
                          @click="$emit('exit')" />
       </div>
-      <div class="flex flex-col p-1 gap-2">
+      <div class="flex flex-col p-1 gap-3">
         <slot>Тело модального окна</slot>
         <button @click.prevent="emit('exit')"
-                class="w-full bg-blue-500 rounded-xl min-w-50 p-1 text-white font-medium cursor-pointer hover:bg-blue-400">
+                class="w-full bg-red-600 rounded-xl min-w-50 p-1 text-white font-medium cursor-pointer hover:bg-red-700">
           Закрыть
         </button>
       </div>

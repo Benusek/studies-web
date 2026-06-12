@@ -3,11 +3,9 @@ import {inject, onMounted, ref} from 'vue'
 import { useRoute } from 'vue-router'
 import apiFetch from '@/helpers/apiFetch.js'
 import NotFound from '@/components/Loaders/NotFound.vue'
-import VideoPreview from "@/components/Previews/Video.vue";
+import VideoPreview from "@/components/Previews/VideoCard.vue";
 import PlaylistPreview from "@/components/Previews/Playlist.vue";
-
 const route = useRoute()
-const api = import.meta.env.VITE_API_KEY
 const data = ref({})
 const isEmpty = ref(false)
 const page = ref(1)
@@ -19,6 +17,7 @@ onMounted(async () => {
   isResponse.value = false
   const result = await apiFetch('GET', `/user/${route.params.id}/videos`)
   if (result) data.value = result
+  console.log(result)
 
   if (!result.videos.length) {
     isEmpty.value = true
@@ -79,7 +78,7 @@ const FollowingUser = async () => {
     <div class="flex flex-col sm:flex-row justify-between items-center" v-if="data.user">
       <div class="flex flex-row gap-2">
         <img class="rounded-full size-20 aspect-square"
-             :src="data.user.avatar ? `${api}/${data.user.avatar}` : '/src/assets/default.png' "
+             :src="data.user.avatar ? `http://localhost:8000/${data.user.avatar}` : '/src/assets/default.png' "
              alt="user">
         <div class="flex flex-col">
           <span class="text-2xl font-medium">{{ data.user.name }}</span>

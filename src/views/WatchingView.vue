@@ -8,7 +8,7 @@ import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import Loading from '@/components/Loaders/Loading.vue'
 import Video from '@/components/Loaders/Video.vue'
 import Hls from 'hls.js'
-import VideoPreview from '@/components/Previews/Video.vue'
+import VideoPreview from '@/components/Previews/VideoCard.vue'
 
 const getVideoPlaylistModal = inject('getVideoPlaylistModal')
 const api = import.meta.env.VITE_APP_API
@@ -25,7 +25,6 @@ const data = ref({
 })
 
 const token = inject('token')
-const subscribes = inject('subscribes')
 const id = inject('id')
 const avatar = inject('avatar')
 
@@ -38,9 +37,9 @@ onMounted(async () => {
     videoData.value = result
   } else return
   if (token && result) {
-    if (subscribes.value && subscribes.value.findIndex((obj) => obj.id === videoData.value.video.user.id) !== -1) {
-      videoData.value.video.user.isSubscribe = true
-    }
+    // if (subscribes.value && subscribes.value.findIndex((obj) => obj.id === videoData.value.video.user.id) !== -1) {
+    //   videoData.value.video.user.isSubscribe = true
+    // }
   }
   await getComments()
   isResponse.value = true
@@ -69,12 +68,12 @@ const getComments = async () => {
 
 
 const FollowingUser = async () => {
-  if (videoData.value.video.user.isSubscribe) {
+  if (videoData.value.video.user.subscribed) {
     const unfollow = await apiFetch('delete', `/user/${videoData.value.video.user.id}/unfollow`)
-    if (unfollow.status) videoData.value.video.user.isSubscribe = false
+    if (unfollow.status) videoData.value.video.user.subscribed = false
   } else {
     const follow = await apiFetch('get', `/user/${videoData.value.video.user.id}/follow`)
-    if (follow.status) videoData.value.video.user.isSubscribe = true
+    if (follow.status) videoData.value.video.user.subscribed = true
   }
 }
 
@@ -138,12 +137,12 @@ const answered = (index) => {
             <div class="flex flex-col">
               <span class="text-sm font-medium">{{ videoData.video.user.name }}</span>
               <span
-                class="text-xs font-sans text-gray-500">{{ videoData.video.user.subscribers_count }} подписчиков</span>
+                class="text-xs font-sans text-gray-500">{{ videoData.video.user.subscribers.count }} подписчиков</span>
             </div>
           </RouterLink>
-          <div v-if="videoData.video.user.id !== parseInt(id)" class="flex flex-row items-center font-medium"
+          <div v-if="videoData.video.user.id !== parseInt(id) && id" class="flex flex-row items-center font-medium"
                @click="FollowingUser">
-            <div v-if="!videoData.video.user.isSubscribe"
+            <div v-if="!videoData.video.user.subscribed"
                  class="p-1.5 text-xs lg:text-sm text-white bg-gray-500 rounded-xl cursor-pointer hover:bg-gray-600 active:bg-gray-700 select-none">
               Подписаться
             </div>
@@ -167,7 +166,7 @@ const answered = (index) => {
       <div class="flex flex-col gap-2">
         <span class=" font-medium text-lg">Комментарии</span>
         <div class="flex flex-col items-center gap-2">
-          <div class="flex items-center gap-2 w-full">
+          <div class="flex items-center gap-2 w-full" v-if="id">
             <img class="rounded-full size-8 aspect-square"
                  :src="avatar ? `${api}/${avatar}` : '/src/assets/default.png'"
                  alt="user">
@@ -175,7 +174,7 @@ const answered = (index) => {
                    @keyup.enter="sendCommentForm"
                    class="outline-none focus:border-b-gray-500 border-b border-gray-200 text-sm p-1 w-full focus:border-white">
           </div>
-
+          <div v-if="!comments" class="">Комментариев пока нет. Будьте первым, кто оставит комментарий!</div>
           <div v-if="data.comment.text" class="flex flex-row gap-2 justify-end w-full">
             <div @click="sendCommentForm"
                  class="text-xs font-medium lg:text-sm text-gray-500 p-1.25 rounded-xl select-none cursor-pointer ring-1 ring-gray-400 hover:bg-gray-200/70 active:bg-gray-200">
@@ -209,7 +208,7 @@ const answered = (index) => {
             </div>
           </div>
           <div class="flex flex-row gap-2">
-            <div @click="answered(index)"
+            <div @click="answered(index)" v-if="id"
                  class="text-xs font-medium text-gray-500 p-1.25 rounded-xl select-none cursor-pointer ring-1 ring-gray-400 hover:bg-gray-200/70 active:bg-gray-200">
               Ответить
             </div>

@@ -6,7 +6,6 @@ import { inject } from 'vue'
 import {useRoute, useRouter} from "vue-router";
 
 const route = useRoute()
-console.log(route.name)
 const api = import.meta.env.VITE_APP_API
 const token = inject('token')
 defineProps({

@@ -13,10 +13,10 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import apiFetch from '@/helpers/apiFetch.js'
 import router from '@/router/index.js'
 import { inject, ref } from 'vue'
-import Loading from '@/components/Loaders/Loading.vue'
 const api = import.meta.env.VITE_APP_API
 const emit = defineEmits(['modal', 'toggle', 'out'])
 defineProps({
+  role: Number,
   user: {
     photo_file: String,
     name: String,
@@ -42,7 +42,6 @@ const header = ref({
 })
 
 const token = inject('token')
-const role = inject('role')
 
 const logout = async () => {
   await apiFetch('GET', '/logout')
@@ -99,66 +98,79 @@ const sendSearch = async () => {
         </li>
       </ul>
     </nav>
-    <ul v-if="collapse" ref="nav"
-        class="absolute right-0 z-2 rounded-b-xl sm:rounded-bl-xl sm:rounded-br-none ring-1 ring-gray-200
-        w-full sm:w-60 md:w-70 h-auto bg-gray-100 cursor-pointer">
-      <Loading v-if="loading" class="p-2" :size="10" />
-      <li v-else-if="token" class="p-3 flex flex-row gap-2">
-        <img
-          :src="user.photo_file != null ? `${api}/${user.photo_file}` : '/src/assets/default.png'"
-          class="rounded-full shadow-md w-15 aspect-square text-lg m-2 hidden sm:block" alt="">
-        <div class="flex flex-col text-lg justify-center rounded-t-xl leading-none gap-1 w-120 sm:w-40">
-          <span class="break-words  line-clamp-1">{{ user.name }}</span>
-          <div class="flex flex-col">
-            <span class="text-xs text-gray-600 break-words  line-clamp-1">
-              {{ user.login ? '@' + user.login : null }}
-            </span>
-            <span class="text-xs text-gray-600 break-words  line-clamp-1">{{ user.email }}</span>
+    <ul v-if="collapse" ref="nav" class="absolute right-0 top-full mt-2 z-50 w-full sm:w-80 overflow-hidden
+    rounded-2xl bg-white border border-gray-200 shadow-xl">
+      <template v-if="loading">
+        <div class="animate-pulse p-4 space-y-4">
+          <div class="flex items-center gap-3">
+            <div class="w-14 h-14 rounded-full bg-gray-200"></div>
+            <div class="flex-1 space-y-2">
+              <div class="h-4 w-32 bg-gray-200 rounded"></div>
+              <div class="h-3 w-24 bg-gray-100 rounded"></div>
+              <div class="h-3 w-40 bg-gray-100 rounded"></div>
+            </div>
+          </div>
+          <div class="border-t border-gray-100 pt-3 space-y-2">
+            <div class="h-10 bg-gray-100 rounded-lg"></div>
+            <div class="h-10 bg-gray-100 rounded-lg"></div>
+            <div class="h-10 bg-gray-100 rounded-lg"></div>
           </div>
         </div>
-      </li>
-      <li v-if="!token"
-          class="p-3 border-b border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300"
-          @click="$emit('modal', 1)">
-        Зарегистрироваться
-      </li>
-      <li v-if="!token"
-          class="p-3 border-b rounded-b-xl sm:rounded-br-none sm:rounded-bl-xl border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300"
-          @click="$emit('modal', 0)">Войти
-      </li>
-      <li v-if="token"
-          class="border-b border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300">
-        <RouterLink to="/settings">
-          <div class="p-3">
-            <FontAwesomeIcon class="flex items-center mr-3" :icon="faGear" />
+      </template>
+      <template v-else>
+        <li v-if="token" class="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+          <img :src="user.photo_file != null ? `${api}/${user.photo_file}` : '/src/assets/default.png'" class="w-14 h-14
+          rounded-full object-cover border border-gray-200 shadow-sm" alt="">
+          <div class="flex flex-col min-w-0 flex-1">
+            <span class="font-medium text-gray-900 truncate">{{ user.name }}</span>
+            <span v-if="user.login" class="text-sm text-gray-500 truncate">@{{ user.login }}</span>
+            <span class="text-xs text-gray-400 truncate">{{ user.email }}</span>
+          </div>
+        </li>
+        <li v-if="!token" @click="$emit('modal', 1)" class="flex items-center px-4 py-3
+        cursor-pointer hover:bg-gray-50 transition-colors">
+          Зарегистрироваться
+        </li>
+        <li v-if="!token" @click="$emit('modal', 0)" class="flex items-center px-4
+        py-3 cursor-pointer hover:bg-gray-50 transition-colors">
+          Войти
+        </li>
+        <li v-if="token">
+          <RouterLink to="/settings" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+            <FontAwesomeIcon :icon="faGear" class="w-4 text-gray-500" />
             <span>Личный кабинет</span>
-          </div>
-        </RouterLink>
-      </li>
-      <li v-if="token && role === 1" @click="$emit('modal', 3)"
-          class="p-3 border-b border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300">
-        <FontAwesomeIcon class="flex items-center mr-3" :icon="faPlus" />
-        <span>Создать плейлист</span>
-      </li>
-      <li v-if="token && role === 1" @click="$emit('modal', 2)"
-          class="p-3 border-b border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300">
-        <FontAwesomeIcon class="flex items-center mr-3" :icon="faFileCirclePlus" />
-        <span>Загрузить видео</span>
-      </li>
-      <li v-if="token && role === 1"
-          class="border-b border-gray-300 hover:bg-gray-200 transition-all duration-100 active:bg-gray-300">
-        <RouterLink to="/playlists">
-          <div class="p-3">
-            <FontAwesomeIcon class="flex items-center mr-3" :icon="faList" />
-            <span class="col-span-2">Плейлисты</span>
-          </div>
-        </RouterLink>
-      </li>
-      <li v-if="token" class="p-3 hover:bg-gray-200 rounded-b-xl sm:rounded-bl-xl sm:rounded-br-none hover:bg-gray-200 transition-all duration-100
-            active:bg-gray-300" @click="logout">
-        <FontAwesomeIcon class="flex items-center mr-3" :icon="faArrowRightFromBracket" />
-        <span class="col-span-2">Выйти</span>
-      </li>
+          </RouterLink>
+        </li>
+        <li v-if="token && role === 1" @click="$emit('modal', 3)" class="flex items-center gap-3
+        px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors">
+          <FontAwesomeIcon :icon="faPlus" class="w-4 text-gray-500" />
+          <span>Создать плейлист</span>
+        </li>
+
+        <li v-if="token && role === 1" @click="$emit('modal', 2)" class="flex items-center
+         gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors">
+          <FontAwesomeIcon :icon="faFileCirclePlus" class="w-4 text-gray-500" />
+          <span>Загрузить видео</span>
+        </li>
+
+        <li v-if="token && role === 1">
+          <RouterLink
+              to="/playlists"
+              class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+            <FontAwesomeIcon :icon="faList" class="w-4 text-gray-500" />
+            <span>Плейлисты</span>
+          </RouterLink>
+        </li>
+        <li v-if="token" class="border-t border-gray-100">
+          <button @click="logout" class="w-full flex items-center
+          gap-3 px-4 py-3 text-left hover:bg-red-50 transition-colors">
+            <FontAwesomeIcon :icon="faArrowRightFromBracket" class="w-4 text-red-500"/>
+            <span class="text-red-600">
+              Выйти
+            </span>
+          </button>
+        </li>
+      </template>
     </ul>
   </header>
 </template>

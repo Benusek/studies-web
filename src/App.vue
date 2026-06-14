@@ -255,15 +255,13 @@ const storeLink = (num) => {
   data.value.modal.number = num
 }
 
-provide('token', computed(() => token.value))
-provide('avatar', computed(()=> data.value.user.avatar))
-provide('id', computed(() => id.value))
-provide('role', computed(() => parseInt(data.value.user['role_id'])))
-provide('getData', getUserData)
+const avatar = computed(() => data.value.user.photo_file)
+provide('token', token)
+provide('avatar', avatar)
+provide('id', id.value)
+
 provide('updateToken', updateToken)
-
 provide('getVideoPlaylistModal', getVideoPlaylistModal)
-
 provide('getFiltered', getFiltered)
 provide('showToast', showToast)
 provide('link', storeLink)
@@ -279,9 +277,9 @@ const openModal = (num) => {
 </script>
 
 <template>
-  <Header @modal="openModal" :user="data.user" @toggle="toggle" @out="clickOutside" :loading="data.isProcessing" />
+  <Header @modal="openModal" :user="data.user" :role="data.user.role_id" @toggle="toggle" @out="clickOutside" :loading="data.isProcessing" />
   <template class="flex flex-col sm:flex-row">
-    <Aside :role="data.user['role_id']" :categories="categories" :subscribe="data.user.subscribe"
+    <Aside :token="token" :role="data.user.role_id" :categories="categories" :subscribe="data.user.subscribe"
            :collapse="data.aside" />
     <RouterView :key="useRoute().fullPath" />
   </template>

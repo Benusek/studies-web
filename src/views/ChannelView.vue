@@ -3,8 +3,8 @@ import {inject, onMounted, ref} from 'vue'
 import { useRoute } from 'vue-router'
 import apiFetch from '@/helpers/apiFetch.js'
 import NotFound from '@/components/Loaders/NotFound.vue'
-import VideoPreview from "@/components/Previews/VideoCard.vue";
-import PlaylistPreview from "@/components/Previews/Playlist.vue";
+import VideoPreview from "@/components/Cards/VideoCard.vue";
+import PlaylistPreview from "@/components/Cards/PlaylistCard.vue";
 const route = useRoute()
 const data = ref({})
 const isEmpty = ref(false)
@@ -74,44 +74,104 @@ const FollowingUser = async () => {
 </script>
 
 <template>
-  <div class="flex flex-col w-full p-3 gap-3">
-    <div class="flex flex-col sm:flex-row justify-between items-center" v-if="data.user">
-      <div class="flex flex-row gap-2">
-        <img class="rounded-full size-20 aspect-square"
-             :src="data.user.avatar ? `http://localhost:8000/${data.user.avatar}` : '/src/assets/default.png' "
-             alt="user">
-        <div class="flex flex-col">
-          <span class="text-2xl font-medium">{{ data.user.name }}</span>
-          <span class="text-xs text-gray-500">{{ data.user.subscribers.count ? data.user.subscribers.count :'Нет' }} подписчиков</span>
+  <div class="mx-auto w-full max-w-[1800px] p-3 lg:p-6">
+    <section v-if="data.user" class="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm">
+      <div class="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+        <div class="flex items-center gap-4">
+          <img class="size-20 md:size-24 rounded-full object-cover ring-2 ring-zinc-100"
+               :src="data.user.avatar ? `http://localhost:8000/${data.user.avatar}` : '/src/assets/default.png'"
+              alt="user">
+
+          <div class="min-w-0">
+            <h1 class="text-2xl md:text-3xl font-bold text-zinc-900 break-words">
+              {{ data.user.name }}
+            </h1>
+            <div class="mt-1 text-sm text-zinc-500">
+              {{ data.user.subscribers.count ? data.user.subscribers.count : 'Нет'}} подписчиков
+            </div>
+          </div>
+
         </div>
+
+        <template v-if="id !== data.user.id && id">
+
+          <button
+              v-if="!data.user.subscribed"
+              @click="FollowingUser"
+              class="h-11 rounded-xl bg-zinc-900 px-5 text-sm font-medium text-white transition hover:bg-zinc-800"
+          >
+            Подписаться
+          </button>
+
+          <button
+              v-else
+              @click="FollowingUser"
+              class="h-11 rounded-xl border border-zinc-300 px-5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100"
+          >
+            Отписаться
+          </button>
+
+        </template>
+
+      </div>
+    </section>
+
+    <!-- Навигация -->
+    <section class="mt-6">
+
+      <div
+          class="inline-flex rounded-2xl border border-zinc-200 bg-white p-1 shadow-sm"
+      >
+
+        <button
+            v-for="index in 2"
+            :key="index"
+            @click="switchPage(index)"
+            class="h-10 rounded-xl px-5 text-sm font-medium transition"
+            :class="
+            page === index
+              ? 'bg-zinc-900 text-white'
+              : 'text-zinc-600 hover:bg-zinc-100'
+          "
+        >
+          {{ index === 1 ? 'Видео' : 'Плейлисты' }}
+        </button>
+
       </div>
 
-      <template v-if="parseInt(id) !== data.user.id && id">
-        <div v-if="!data.user.subscribed" @click="FollowingUser"
-             class="px-2 py-1 text-xs text-white bg-blue-500 rounded-sm cursor-pointer hover:bg-blue-600 active:bg-blue-700 select-none">
-          Подписаться
-        </div>
-        <div v-else-if="data.user.subscribed" @click="FollowingUser"
-             class="py-1 px-2 text-xs text-red-400 border border-red-400 rounded-sm font-medium cursor-pointer hover:bg-gray-100 active:bg-gray-200/60 select-none">
-          Отписаться
-        </div>
-      </template>
+    </section>
 
-    </div>
-<!--    TODO: Вынести в компонент -->
-      <div class="col-span-full flex flex-row gap-2 select-none">
-        <div v-for="index in 2"
-             class="rounded-lg p-1.25 text-xs font-medium cursor-pointer"
-             :class="page !== index ? 'ring-gray-400 text-gray-600 active:bg-gray-300 hover:bg-gray-200' : 'text-white bg-blue-400 active:bg-blue-400 hover:bg-blue-300'"
-             @click="switchPage(index)">{{ index === 1 ? 'Видео' : 'Плейлисты' }}
+    <!-- Контент -->
+    <section class="mt-6">
+
+      <div
+          class="rounded-3xl border border-zinc-200 bg-white p-4 lg:p-5"
+      >
+
+        <NotFound
+            :text="text"
+            :isEmpty="isEmpty"
+        />
+
+        <div
+            class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5"
+        >
+
+          <PlaylistPreview
+              :playlists="data.playlists"
+          />
+
+          <VideoPreview
+              :videos="data.videos"
+              :variant="false"
+              :isResponse="isResponse"
+          />
+
         </div>
+
       </div>
-    <div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 h-auto p-2">
-        <NotFound :text="text" :isEmpty="isEmpty" />
-        <PlaylistPreview :playlists="data.playlists" />
-        <VideoPreview :videos="data.videos" :isResponse="isResponse" />
-      </div>
-    </div>
+
+    </section>
+
   </div>
 </template>

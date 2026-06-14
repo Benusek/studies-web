@@ -13,15 +13,15 @@ import { inject, ref } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 defineProps({
+  token: String,
   role: Number,
   collapse: Boolean,
   categories: Object,
   subscribe: Array
 })
 
-const api = import.meta.env.API
-const token = inject('token')
 const id = inject('id')
+const api = import.meta.env.VITE_APP_API
 const getFiltered = inject('getFiltered')
 const aside = ref({
   query: '',
@@ -43,7 +43,7 @@ const aside = ref({
           </RouterLink>
           <div class="p-3">
             <input v-model="aside.query" type="text" placeholder="Категория"
-                   class="bg-white text-xs rounded-full border border-gray-300 p-1.5 w-full focus:border-gray-400 outline-none">
+                   class="bg-white text-xs rounded-lg border border-gray-300 p-1.5 w-full focus:border-gray-400 outline-none">
           </div>
           <div v-for="category in getFiltered(categories['all'], categories['current'], aside.query)"
                class="hover:bg-gray-200/60 active:bg-gray-200 cursor-pointer rounded-lg">
@@ -84,7 +84,7 @@ const aside = ref({
           <div v-for="sub in aside.collapse?subscribe.slice(0, 3):subscribe">
             <RouterLink :to="'/channel/' + sub.id" class="flex flex-row text-xs gap-2 items-center break-words overflow-hidden line-clamp-1 hover:bg-gray-100 p-1 rounded-lg"
                         :class="{'justify-center': collapse, 'gap-3 ps-4': !collapse}">
-              <img :src="sub.avatar ? api + sub.avatar : '/src/assets/default.png'" alt="avatar"
+              <img :src="sub.photo_file ? `${api}/${sub.photo_file}` : '/src/assets/default.png'" alt=""
                    class="rounded-full aspect-square text-lg w-7">
               <span class="break-words line-clamp-1"
                     v-if="!collapse">{{ sub.name }}</span>
@@ -102,9 +102,6 @@ const aside = ref({
             <FontAwesomeIcon :icon="faArrowUp" class="text-md ms-4" />
             <span v-if="!collapse">Свернуть</span>
           </div>
-        </li>
-        <li v-if="token && role === 1" class="pb-10">
-
         </li>
       </ul>
     </div>

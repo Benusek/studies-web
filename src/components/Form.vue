@@ -72,12 +72,19 @@ const post = async () => {
         maxChunkRetries: 0,
         query: { 'upload_token': meta }
       })
+      console.log('UPLOAD START')
       r.addFile(form.value.data['video'])
       r.on('fileAdded', function(file, event) {
+        console.log('FILE ADDED')
         r.upload()
       })
-      r.on('fileProgress', function(file) {
+      r.on('fileProgress', file => {
         form.value.progress = Math.floor(file.progress(true) * 100)
+
+        form.value.uploaded =
+            Math.floor(file.size * file.progress(true) / 1024 / 1024)
+
+        form.value.total = file.size / 1024 / 1024
       })
       r.on('fileError', function(file, err) {
         try {
@@ -133,7 +140,7 @@ const exit = (message) => {
 </script>
 
 <template>
-  <form @submit.prevent="post()" class="flex flex-col gap-4 grid grid-cols-1 md:grid-cols-2">
+  <form @submit.prevent="post()" class="flex flex-col gap-4 grid grid-cols-1 lg:grid-cols-2">
     <li v-for="input in forms.inputs" class="relative flex flex-col" :class="{'col-span-full': input.type.includes('file')}">
       <div
           v-if="!input.type.includes('file')"
@@ -143,7 +150,7 @@ const exit = (message) => {
         <label :for="input.code" class="text-gray-500 select-none cursor-text" :class="{ 'text-red-600/70': form.errors[input.code], 'top-[-18px] px-1 text-xs': form.data[input.code] && !input.type.includes('checkbox'),
       'peer-focus:text-xs peer-focus:top-[-18px] peer-focus:px-1 transition-all duration-300 absolute top-1.5 left-2': !input.type.includes('checkbox'), '': input.type.includes('checkbox')}">
           {{ input.label }}
-      </label>
+        </label>
         <select
             v-if="input.type === 'select'"
             v-model="form.data[input.code]"
@@ -169,17 +176,20 @@ const exit = (message) => {
       <File v-else :file="form.data" :type="input.code" :name="input.label" @change="changeFile"/>
       <Error :errors="form.errors[input.code]" />
     </li>
-    <div v-if="form.progress !== 100 & form.progress !== null" class="flex flex-col gap-1 md:col-span-2 lg:col-span-full">
-      <p class="text-xs self-center">Загрузка видео на сервер</p>
-      <div
-        class="w-full bg-gray-400 rounded rounded-full border-2 border-gray-400 overflow-hidden relative flex justify-center">
-        <div class="bg-green-500 h-full flex left-0 absolute transition-all duration-100 ease-in"
-             :style="{'width': `${form.progress}%`}"></div>
-        <p class="text-white text-xs font-medium p-1 relative">{{ form.progress }}%</p>
+    <div v-if="form.progress !== 100 & form.progress !== null" class="space-y-2 col-span-full">
+      <div class="flex justify-between text-sm">
+        <div class="text-xs">
+          <span>Загрузка видео {{ form.progress }}%</span>
+        </div>
+        <span class="text-xs text-zinc-400">{{ form.uploaded }} MB / {{ form.total }} MB</span>
+      </div>
+      <div class="h-2 bg-slate-700/30 rounded-full overflow-hidden">
+        <div class="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 transition-all duration-300"
+            :style="{ width: `${form.progress}%` }"/>
       </div>
     </div>
     <button :disabled="form.isProcess"
-            class=" relative h-8 w-full bg-zinc-600 rounded-xl p-1 text-white font-medium cursor-pointer hover:bg-zinc-700 flex justify-center md:col-span-2 lg:col-span-full">
+            class="relative w-full bg-indigo-600 rounded-lg p-1.5 items-center text-white font-medium cursor-pointer hover:bg-indigo-700 col-span-full">
       <span v-if="!form.isProcess">{{ forms['submit'] }}</span>
       <Loading v-else :size="6" />
     </button>

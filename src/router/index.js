@@ -38,7 +38,8 @@ const router = createRouter({
       name: 'settings',
       component: SettingsView,
       meta: {
-        forAuth: true
+        forAuth: true,
+        title: '123'
       }
     },
     {
@@ -66,7 +67,11 @@ const router = createRouter({
 })
 
 router.afterEach((to) => {
+  if (typeof to.meta['title'] === 'function') {
+    document.title = to.meta['title'](to)
+  } else {
     document.title = to.meta['title'] || 'Studies'
+  }
 })
 
 router.beforeResolve(async to => {

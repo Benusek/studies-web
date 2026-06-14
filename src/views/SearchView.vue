@@ -11,8 +11,8 @@ import {
   faSliders,
   faXmark
 } from '@fortawesome/free-solid-svg-icons'
-import PlaylistPreview from '@/components/Previews/Playlist.vue'
-import VideoPreview from '@/components/Previews/VideoCard.vue'
+import PlaylistPreview from '@/components/Cards/PlaylistCard.vue'
+import VideoPreview from '@/components/Cards/VideoCard.vue'
 import NotFound from '@/components/Loaders/NotFound.vue'
 
 const getFiltered = inject('getFiltered')
@@ -47,8 +47,6 @@ const data = ref({
   current_page: 1,
   input_page: ''
 })
-
-//TODO:: Не работает филтрация
 const count = ref(0)
 onMounted(async () => {
   const tags = await apiFetch('GET', '/tag')
@@ -72,7 +70,9 @@ onMounted(async () => {
     data.value.status.isUploading = false
   }
 
-  if (result.count) (count.value / 5) % 1 !== 0 ? count.value = Math.floor(count.value / 5) + 1 : count.value = Math.floor(count.value / 5)
+  if (result.count) {
+    count.value = Math.ceil(result.count / 5)
+  }
   requestPage(result)
 })
 
@@ -82,7 +82,17 @@ const sortTags = (tag) => {
 }
 
 const writeForm = (value, massive, id) => {
-  value ? massive.push(id) : massive.splice(massive.indexOf(id), 1)
+  if (value) {
+    if (!massive.includes(id)) {
+      massive.push(id)
+    }
+  } else {
+    const index = massive.indexOf(id)
+
+    if (index !== -1) {
+      massive.splice(index, 1)
+    }
+  }
 }
 
 const resetFilter = (radio) => {
@@ -104,7 +114,17 @@ const resetFilter = (radio) => {
 const submitFilter = async () => {
   data.value.response.videos = []
   data.value.response.playlists = []
-  const result = await apiFetch('POST', `/video/search/start/0/count/5`, data.value.form)
+
+  const result = await apiFetch(
+      'POST',
+      '/video/search/start/0/count/5',
+      data.value.form
+  )
+  if (result?.count) {
+    console.log(result.count)
+    count.value = Math.ceil(result.count / 5)
+  }
+
   requestPage(result)
 }
 
@@ -121,9 +141,20 @@ const changePosition = async (pos) => {
 
 const requestPage = (object) => {
   if (!object) return
-  if (object.videos) data.value.response.videos = object.videos
-  if (object.playlists) data.value.response.playlists = object.playlists
-  if (!object.count) data.value.status.isEmpty = true
+
+  data.value.status.isEmpty = false
+
+  if (object.videos) {
+    data.value.response.videos = object.videos
+  }
+
+  if (object.playlists) {
+    data.value.response.playlists = object.playlists
+  }
+
+  if (!object.count) {
+    data.value.status.isEmpty = true
+  }
 }
 
 const inputPage = () => {
@@ -150,68 +181,65 @@ const inputPage = () => {
       <span class="font-medium text-xs">Фильтр</span>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
-        <ul class="col-span-full grid grid-cols-1 sm:grid-cols-3 p-3 w-full rounded-lg border-1 border-gray-200 bg-gray-300/10"
+        <ul class="col-span-full grid lg:grid-cols-3 gap-2 p-2 w-full rounded-lg shadow-sm border border-gray-100 bg-gray-300/10"
           v-if="data.status.isFilter">
           <li class="flex flex-col p-4 gap-2">
-            <span class="font-medium text-sm mb-0 text-gray-600 select-none">По категории</span>
             <input v-model="data.filter.categoryQuery" type="text" placeholder="Категория"
-                   class="border border-gray-300 bg-white rounded-2xl ps-2 p-1 text-xs outline-none font-medium focus:border-gray-400"
-                   @input="data.filter.categories = []; getFiltered(data.filter.allCategories, data.filter.categories, data.filter.categoryQuery)">
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-              <label :for="`category${category.id}`" v-for="category in data.filter.categories" class="flex gap-2 sm:justify-between items-center cursor-pointer hover:bg-gray-100
-              active:bg-gray-200 p-2 select-none rounded-lg" :class="{'bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700': category.isChecked}"
+                   class="w-full px-2 py-1.5 text-sm bg-white rounded-xl border border-zinc-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none"
+                   @input="data.filter.categories = getFiltered(data.filter.allCategories,data.filter.categoryQuery)"/>
+            <div class="flex flex-wrap gap-2">
+              <label :for="`category${category.id}`" v-for="category in data.filter.categories"
+                     class="px-3 py-1.5 rounded-full text-sm border cursor-pointer transition"
+                     :class="category.isChecked ? 'bg-zinc-600 border-zinc-500 text-white' : 'bg-white border-zinc-300 hover:border-zinc-400'"
                      @click="category.isChecked = !category.isChecked; writeForm(category.isChecked, data.form.categories, category.id)">
                 <span class="text-xs break-words line-clamp-1">{{ category.name }}</span>
               </label>
             </div>
           </li>
           <li class="flex flex-col p-4 gap-2">
-            <span class="font-medium text-sm mb-0 text-gray-600 select-none">По тегам</span>
             <input v-model="data.filter.tagQuery" type="text" placeholder="Тег"
-                   class="border border-gray-300 bg-white rounded-2xl ps-2 p-1 text-xs outline-none font-medium focus:border-gray-400"
-                   @input="data.filter.tags = []; getFiltered(data.filter.allTags, data.filter.tags, data.filter.tagQuery)">
+                   class="w-full px-2 py-1.5 text-sm bg-white rounded-xl border border-zinc-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none"
+                   @input="data.filter.tags = getFiltered(data.filter.allTags, data.filter.tagQuery)">
             <div class="flex flex-wrap gap-1 select-none">
-              <label :for="`tag${tag.id}`" v-for="tag in data.filter.tags" class="break-inside-avoid relative flex gap-2 justify-between items-center cursor-pointer bg-gray-500 font-medium rounded-lg
-              text-white hover:bg-gray-600 active:bg-gray-700 w-fit px-2 text-[10px]"
-                     :class="{'bg-indigo-500 hover:bg-indigo-600': tag.isChecked}"
+              <label :for="`tag${tag.id}`" v-for="tag in data.filter.tags"  class="px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition"
+                     :class="{'bg-indigo-600 hover:bg-indigo-700 text-white ': tag.isChecked}"
                      @click="sortTags(tag); writeForm(tag.isChecked, data.form.tags, tag.id)">
                 <span class="break-words line-clamp-1">#{{ tag.name }}</span>
-                <span v-if="tag.isChecked">
-                  <FontAwesomeIcon :icon="faXmark" />
-                </span>
               </label>
             </div>
           </li>
-          <li
-            class="flex flex-col p-4 items-start gap-2 font-medium text-gray-500 select-none">
+          <li class="flex flex-col p-4 items-start gap-2 font-medium text-gray-500 select-none">
             <span class="font-medium text-sm mb-0 text-gray-600">Тип</span>
             <label for="all" class="flex gap-2 text-xs cursor-pointer" @click="data.form.type = 'all'">
               <input type="radio" checked ref="all" name="type" id="all"
-                     class="checked:accent-indigo-500 peer cursor-pointer">
-              <span class="peer-checked:text-indigo-500">Все</span>
+                     class="checked:accent-zinc-500 peer cursor-pointer">
+              <span class="peer-checked:text-zinc-500">Все</span>
             </label>
             <label for="video" class="flex gap-2 text-xs cursor-pointer" @click="data.form.type = 'video'">
-              <input type="radio" name="type" id="video" class="checked:accent-indigo-500 peer cursor-pointer">
-              <span class="peer-checked:text-indigo-500">Видео</span>
+              <input type="radio" name="type" id="video" class="checked:accent-zinc-500 peer cursor-pointer">
+              <span class="peer-checked:text-zinc-500">Видео</span>
             </label>
             <label for="playlist" class="flex gap-2 text-xs cursor-pointer" @click="data.form.type = 'playlist'">
-              <input type="radio" name="type" id="playlist" class="checked:accent-indigo-500 peer cursor-pointer">
-              <span class="peer-checked:text-indigo-500">Плейлист</span>
+              <input type="radio" name="type" id="playlist" class="checked:accent-zinc-500 peer cursor-pointer">
+              <span class="peer-checked:text-zinc-500">Плейлист</span>
             </label>
           </li>
-          <li class="col-span-full  flex flex-row justify-center sm:justify-end gap-2">
+          <li class="col-span-full flex justify-end gap-3 border-t border-zinc-200 p-4">
             <button @click.prevent="resetFilter($refs.all)"
-                    class="p-1.5 inset-ring-1 ring-red-400 rounded-2xl text-red-400 text-xs font-medium cursor-pointer hover:bg-red-100/20 active:bg-red-200/20">
+                    class="px-2 py-1.5 font-medium text-sm text-gray-500 hover:bg-gray-100 rounded-sm cursor-pointer active:bg-gray-200">
               Сбросить
             </button>
             <button @click.prevent="submitFilter()"
-                    class="p-1.5 bg-gray-500 rounded-2xl text-white text-xs font-medium cursor-pointer hover:bg-gray-600 active:bg-gray-500">
+                    class="p-1.5 bg-gray-600 rounded-sm text-white text-xs font-medium cursor-pointer hover:bg-gray-700 active:bg-gray-500">
               Подтвердить
             </button>
           </li>
         </ul>
+      <h2 class="font-semibold text-lg col-span-full mt-4">
+        Результаты
+      </h2>
       <PlaylistPreview :playlists="data.response.playlists.items" />
-      <VideoPreview :videos="data.response.videos.items" :isResponse="data.status.isResponse" />
+      <VideoPreview :videos="data.response.videos.items" :isResponse="data.status.isResponse" :variant="false" />
       <NotFound text="На ваш поисковый запрос ничего не найдено" :isEmpty="data.status.isEmpty" />
       <div v-if="!data.status.isEmpty && count > 1"
            class="relative col-span-full flex items-end justify-center items-center gap-1">

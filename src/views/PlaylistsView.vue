@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
-import PlaylistPreview from '@/components/Previews/Playlist.vue'
+import PlaylistPreview from '@/components/Cards/PlaylistCard.vue'
 import apiFetch from '@/helpers/apiFetch.js'
 import NotFound from '@/components/Loaders/NotFound.vue'
 

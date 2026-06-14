@@ -21,7 +21,7 @@ defineProps({
       <div class="flex flex-col p-1 gap-3">
         <slot>Тело модального окна</slot>
         <button @click.prevent="emit('exit')"
-                class="w-full bg-red-600 rounded-xl min-w-50 p-1 text-white font-medium cursor-pointer hover:bg-red-700">
+                class="w-full bg-zinc-600 rounded-lg min-w-50 py-1.5 text-white font-medium cursor-pointer hover:bg-zinc-700">
           Закрыть
         </button>
       </div>

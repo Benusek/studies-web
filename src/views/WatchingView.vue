@@ -39,6 +39,7 @@ onMounted(async () => {
 
   if (result) {
     videoData.value = result
+    console.log(result)
     document.title = result.video.title
     isResponse.value = true
   }

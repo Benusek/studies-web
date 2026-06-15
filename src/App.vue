@@ -108,7 +108,7 @@ const forms = [
         options: []
       },
       {
-        label: 'Публичное',
+        label: 'Публичное *',
         code: 'public',
         type: 'checkbox'
       }
@@ -260,6 +260,7 @@ provide('token', token)
 provide('avatar', avatar)
 provide('id', id.value)
 
+provide('getData', getUserData)
 provide('updateToken', updateToken)
 provide('getVideoPlaylistModal', getVideoPlaylistModal)
 provide('getFiltered', getFiltered)

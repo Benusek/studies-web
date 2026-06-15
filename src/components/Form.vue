@@ -32,7 +32,7 @@ const changeFile = (event, key, target) => {
     form.value.data[key] = event[target].files[0]
     form.value.data[key + 'name'] = event[target].files[0].name
     if (form.value.data[key + 'blob']) URL.revokeObjectURL(form.value.data[key + 'blob'])
-      form.value.data[key + 'blob'] = URL.createObjectURL(event[target].files[0])
+    form.value.data[key + 'blob'] = URL.createObjectURL(event[target].files[0])
   }
 }
 
@@ -185,7 +185,7 @@ const exit = (message) => {
       </div>
       <div class="h-2 bg-slate-700/30 rounded-full overflow-hidden">
         <div class="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 transition-all duration-300"
-            :style="{ width: `${form.progress}%` }"/>
+             :style="{ width: `${form.progress}%` }"/>
       </div>
     </div>
     <button :disabled="form.isProcess"

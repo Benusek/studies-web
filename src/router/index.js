@@ -39,7 +39,7 @@ const router = createRouter({
       component: SettingsView,
       meta: {
         forAuth: true,
-        title: '123'
+        title: 'Личный кабинет'
       }
     },
     {

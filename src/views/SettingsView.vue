@@ -171,15 +171,16 @@ const sendForm = async () => {
           </div>
         </section>
         <div class="flex justify-between">
-          <RouterLink :to="'/channel/' + data.user.id" :disabled="data.isProcessing" class="min-w-[220px] h-12 rounded-2xl bg-zinc-600 hover:bg-zinc-700
-            disabled:bg-zinc-500 disabled:cursor-not-allowed text-white font-semibold transition flex items-center
-            justify-center cursor-pointer">
+          <RouterLink :to="'/channel/' + data.user.id" :disabled="data.isProcessing"
+                      class="min-w-[220px] h-12 rounded-2xl bg-zinc-900 hover:bg-zinc-800 disabled:bg-zinc-500
+                      disabled:cursor-not-allowed text-white font-semibold transition flex items-center
+                      justify-center cursor-pointer">
             <Loading v-if="data.isProcessing" :size="5"/>
             <span v-else>
               Перейти к профилю
             </span>
           </RouterLink>
-          <button :disabled="data.isProcessing" class="min-w-[220px] h-12 rounded-2xl bg-zinc-600 hover:bg-zinc-700
+          <button :disabled="data.isProcessing" class="min-w-[220px] h-12 rounded-2xl bg-zinc-900 hover:bg-zinc-800
             disabled:bg-zinc-500 disabled:cursor-not-allowed text-white font-semibold transition flex items-center
             justify-center cursor-pointer">
             <Loading v-if="data.isProcessing" :size="5"/>

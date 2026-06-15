@@ -3,12 +3,13 @@ import { onMounted, ref } from 'vue'
 import PlaylistPreview from '@/components/Cards/PlaylistCard.vue'
 import apiFetch from '@/helpers/apiFetch.js'
 import NotFound from '@/components/Loaders/NotFound.vue'
+import PlaylistsSkeleton from "@/components/Loaders/PlaylistsSkeleton.vue";
 
 const data = ref({
   isEmpty: false,
   playlists: [],
   menu: 1,
-  isProcessing: false
+  isResponse: false
 })
 
 onMounted(async () => {
@@ -16,10 +17,7 @@ onMounted(async () => {
 })
 
 const pickPlaylists = async (menu) => {
-  if (data.value.isProcessing) {
-    return
-  }
-  data.value.isProcessing = true
+  data.value.isResponse = false
   data.value.menu = menu
   switch (menu) {
     case 1:
@@ -32,7 +30,7 @@ const pickPlaylists = async (menu) => {
       break
   }
 
-  data.value.isProcessing = false
+  data.value.isResponse = true
 }
 
 const examResult = (result) => {
@@ -51,17 +49,19 @@ const examResult = (result) => {
 </script>
 
 <template>
-  <div class="p-3 w-full">
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5">
-      <div class="col-span-full flex flex-row gap-2 select-none">
-        <div v-for="index in 2"
-          class="rounded-lg p-1.25 text-xs font-medium cursor-pointer"
-          :class="data.menu !== index ? 'ring-gray-400 text-gray-600 active:bg-gray-300 hover:bg-gray-200' : 'text-white bg-blue-400 active:bg-blue-400 hover:bg-blue-300'"
-          @click="pickPlaylists(index)">{{ index === 1 ? 'Ваши' : 'Пользователей' }}
-        </div>
+  <PlaylistsSkeleton v-if="!data.isResponse" />
+  <div v-else class="p-2 w-full">
+    <section class="mb-4">
+      <div class="inline-flex rounded-2xl border border-zinc-200 bg-white p-1 shadow-sm gap-2 flex">
+        <button v-for="index in 2" :key="index" @click="pickPlaylists(index)" class="h-10 rounded-xl px-5 text-sm font-medium transition cursor-pointer"
+                :class="data.menu === index ? 'bg-zinc-900 text-white' : 'text-zinc-600 hover:bg-zinc-100'">
+          {{ index === 1 ? 'Ваши' : 'Пользователей' }}
+        </button>
       </div>
+    </section>
+    <section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 rounded-3xl border border-zinc-200 bg-white p-4">
       <NotFound text="Список плейлистов пуст" :isEmpty="data.isEmpty" />
       <PlaylistPreview v-if="data.playlists.length" :playlists="data.playlists" />
-    </div>
+    </section>
   </div>
 </template>

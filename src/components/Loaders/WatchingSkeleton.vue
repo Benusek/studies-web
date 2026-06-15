@@ -1,7 +1,3 @@
-<script setup>
-
-</script>
-
 <template>
   <div class="flex flex-2 flex-col lg:flex-row py-2 animate-pulse">
     <div class="flex-1 flex flex-col gap-4">

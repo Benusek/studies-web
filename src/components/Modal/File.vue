@@ -1,60 +1,139 @@
 <script setup>
 import { ref } from 'vue'
-import {faCloudArrowUp, faFileVideo, faImage} from "@fortawesome/free-solid-svg-icons";
-import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
+import {
+  faCloudArrowUp,
+  faTrash,
+  faXmark
+} from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 const dragover = ref(false)
-defineEmits(['change'])
+
+defineEmits(['change', 'remove'])
+
 defineProps({
   file: Object,
   type: String,
   name: String
 })
-
 </script>
 
 <template>
-  <label :for="type" @dragover.prevent="dragover = true" @dragleave.prevent="dragover = false"
-         @drop.prevent="$emit('change', $event, type, 'dataTransfer'); dragover = false">
-    <span class="select-none text-xs">{{ name }}</span>
-    <template class="cursor-pointer border rounded-lg bg-gray-100/20 flex flex-col p-2"
-              :class="{'border-green-500 animate-pulse':dragover, 'border-gray-300':!dragover}">
-      <input type="file" :id="type" :name="type" class="hidden" ref="input"
-             :accept="['avatar','thumbnail'].includes(type) ? 'image/*' : 'video/*'"
-             @change="$emit('change', $event, type, 'target')">
+  <label
+      :for="type"
+      @dragover.prevent="dragover = true"
+      @dragleave.prevent="dragover = false"
+      @drop.prevent="$emit('change', $event, type, 'dataTransfer'); dragover = false">
+
+    <div class="mb-2 text-sm font-medium text-zinc-700">
+      {{ name }}
+    </div>
+
+    <div
+        class="relative overflow-hidden rounded-2xl border bg-white transition-all duration-200"
+        :class="dragover
+          ? 'border-indigo-500 ring-4 ring-indigo-100'
+          : 'border-zinc-200 hover:border-zinc-300'">
+
+      <input
+          type="file"
+          :id="type"
+          :name="type"
+          class="hidden"
+          :accept="['avatar','thumbnail'].includes(type) ? 'image/*' : 'video/*'"
+          @change="$emit('change', $event, type, 'target')">
+
       <template v-if="file[type + 'blob']">
-        <img v-if="['thumbnail'].includes(type)" class="w-full rounded-t-lg object-contain h-30"
-             :src="file ? file[type + 'blob'] : null" alt="thumbnail">
-        <video v-else-if="type.includes('video')" :key="file[type + 'blob']"
-               class="w-full rounded-t-lg object-contain h-30" controls>
-          <source :src="file ? file[type + 'blob'] : null" />
+
+        <button
+            type="button"
+            @click.prevent="$emit('remove', type)"
+            class="absolute top-3 right-3 z-20 size-8 rounded-full bg-black/70 text-white
+            hover:bg-red-500 transition cursor-pointer">
+          <FontAwesomeIcon :icon="faXmark"/>
+        </button>
+
+        <img
+            v-if="type === 'thumbnail'"
+            :src="file[type + 'blob']"
+            class="h-64 w-full object-cover" />
+
+        <video
+            v-else-if="type === 'video'"
+            :key="file[type + 'blob']"
+            class="h-64 w-full bg-black object-contain"
+            controls>
+          <source :src="file[type + 'blob']">
         </video>
-        <div v-else-if="['avatar'].includes(type)"
-             class="relative flex flex-row items-end gap-4 justify-center p-2">
-          <img v-for="i in 3"
-               :src="file[type + 'name'] ? file[type + 'blob'] : '/src/assets/default.png'"
-               alt="avatar"
-               class="rounded-full aspect-square object-cover border border-gray-200 shadow-md
-               hover:brightness-80 bg-gray-300" :class="`w-${20 - 5 * i} h-${20 - 5 * i}`" />
+
+        <div
+            v-else-if="type === 'avatar'"
+            class="flex justify-center py-8">
+
+          <img
+              :src="file[type + 'blob']"
+              class="size-32 rounded-full object-cover border border-zinc-200 shadow-sm" />
         </div>
+
+        <div
+            class="flex items-center justify-between border-t border-zinc-200 bg-zinc-50 px-4 py-3">
+
+          <div class="min-w-0">
+            <div class="truncate text-sm font-medium text-zinc-800">
+              {{ file[type + 'name'] }}
+            </div>
+            <div class="text-xs text-zinc-500">
+              Файл готов к загрузке
+            </div>
+          </div>
+
+          <button
+              type="button"
+              @click.prevent="$emit('remove', type)"
+              class="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-red-500
+              hover:bg-red-50 transition cursor-pointer">
+
+            <FontAwesomeIcon :icon="faTrash"/>
+            <span>Удалить</span>
+
+          </button>
+
+        </div>
+
       </template>
 
-      <p v-if="file[type + 'name']" :class="{'text-green-500': dragover, 'text-gray-500': !dragover}"
-         class="flex justify-center text-gray-700 w-50 line-clamp-1 break-words p-2">
-        {{ file[type + 'name'] }}
-      </p>
-      <div v-else class="flex flex-col items-center justify-center gap-3 py-10 px-6 text-center border-dashed"
-           :class="{'border-green-500': dragover, 'border-gray-500': !dragover}">
-        <FontAwesomeIcon :icon="type.includes('video') ? faFileVideo : faImage" class="text-4xl text-gray-500"/>
+      <div
+          v-else
+          class="flex flex-col items-center justify-center gap-4 p-4 text-center">
+
         <div>
-          <p class="text-gray-400">Перетащите файл сюда</p>
-          <p class="text-sm text-gray-500">или нажмите для выбора</p>
+          <div class="font-medium text-zinc-800">
+            Перетащите файл сюда
+          </div>
+
+          <div class="mt-1 text-sm text-zinc-500">
+            или нажмите для выбора
+          </div>
         </div>
-        <div class="flex items-center gap-2 text-xs text-gray-500">
-          <FontAwesomeIcon :icon="faCloudArrowUp" />
-          <span> {{ type.includes('video') ? 'Видео MP4, MOV' : 'PNG, JPG, WEBP'}}</span>
+
+        <div
+            class="flex items-center gap-2 rounded-full bg-zinc-100 px-3 py-1.5 text-xs text-zinc-600">
+
+          <FontAwesomeIcon :icon="faCloudArrowUp"/>
+
+          <span>
+            {{
+              type.includes('video')
+                  ? 'MP4, MOV, WEBM'
+                  : 'PNG, JPG, WEBP'
+            }}
+          </span>
+
         </div>
+
       </div>
-    </template>
+
+    </div>
+
   </label>
 </template>

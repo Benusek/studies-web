@@ -7,6 +7,7 @@ import {useRoute} from "vue-router";
 const activeVideo = ref(null)
 const activeHls = ref(null)
 const api = import.meta.env.VITE_APP_API
+const id = inject('id')
 const props = defineProps({isResponse: Boolean, videos: Array, variant: {
     type: Boolean,
     default: true
@@ -97,9 +98,8 @@ const timeupdateVideo = (video, el) => {
 </script>
 <template>
   <div v-for="(video, index) in videos"
-       class="group p-2 overflow-hidden rounded-2xl shadow-sm cursor-point"
+       class="group p-2 overflow-hidden rounded-2xl cursor-point"
        :class="{'flex gap-4 items-start': variant}">
-
     <div class="relative" :class="{' w-42 shrink-0': variant,'w-full': !variant}">
       <div v-show="!video.isHover"
           class="aspect-[16/9] bg-center bg-contain bg-no-repeat bg-black rounded-lg"
@@ -124,7 +124,7 @@ const timeupdateVideo = (video, el) => {
                            class="absolute rounded-full top-0 m-2 w-4 right-0 h-1 text-white p-2 font-medium bg-black/50"
                            :icon="faVolumeHigh"/>
         </template>
-        <FontAwesomeIcon @click="getVideoPlaylists(video)"
+        <FontAwesomeIcon v-if="id" @click="getVideoPlaylists(video)"
                          class="absolute rounded-full top-0 m-2 w-4 right-10 h-1 text-white p-2 font-medium bg-black/50"
                          :icon="faList"/>
         <div class="h-1 absolute bg-red-500 bottom-0 z-0" :class="`w-${video.progress ? video.progress : 0}`"

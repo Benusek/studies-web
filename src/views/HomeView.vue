@@ -3,16 +3,19 @@
 import { onMounted, ref } from 'vue'
 import apiFetch from '@/helpers/apiFetch.js'
 import { useRoute } from 'vue-router'
-import Loading from '@/components/Loaders/Loading.vue'
 import NotFound from '@/components/Loaders/NotFound.vue'
-import VideoPreview from '@/components/Cards/VideoCard.vue'
 import VideoCard from "@/components/Cards/VideoCard.vue";
+import VideoSkeleton from "@/components/Loaders/VideoSkeleton.vue";
+import InfiniteScroll from "@/components/InfiniteScroll.vue";
 
 const route = useRoute()
 const data = ref({
   status: {
     isResponse: false,
-    isUploading: true,
+    isProcessing: false,
+    isEmpty: false,
+
+    hasMore: true
   },
   category: route.params.category,
   videos: []
@@ -25,52 +28,56 @@ if (!data.value.category) {
 }
 
 onMounted(async () => {
-  const result = await apiFetch('GET', `/video/start/${data.value.videos.length}/count/12${data.value.category}`)
-  if (result.videos) {
-    if (result.videos.length < 11) {
-      data.value.status.isUploading = false
-    }
-    data.value.videos = result.videos
-  }
-
-  if (result.data) {
-    data.value.status.isEmpty = true
-    data.value.status.isUploading = false
-  }
-
-  if (result) {
-    data.value.status.isResponse = true
-  }
+  await loadMore()
+  data.value.status.isResponse = true
 })
 
-window.addEventListener('scroll', async () => {
-  if (data.value.status.isProcessing || data.value.status.isResponse === false) {
+const loadMore = async () => {
+  if (
+      data.value.status.isProcessing ||
+      !data.value.status.hasMore
+  ) {
     return
   }
-  if (window.innerHeight + window.pageYOffset >= document.documentElement.scrollHeight && data.value.status.isUploading) {
-    data.value.status.isProcessing = true
-    const result = await apiFetch('GET', `/video/start/${data.value.videos.length}/count/11${data.value.category}`)
 
-    if (result.data) {
-      data.value.status.isUploading = false
+  data.value.status.isProcessing = true
+
+  try {
+    const result = await apiFetch(
+        'GET',
+        `/video/start/${data.value.videos.length}/count/12${data.value.category}`
+    )
+
+    if (result?.data?.length < 1) {
+      data.value.status.isEmpty = true
+      return
     }
 
-    if (result?.videos) {
-      data.value.videos = data.value.videos.concat(result.videos)
+    if (!result?.videos?.length) {
+      data.value.status.hasMore = false
+      return
     }
 
+    data.value.videos.push(...result.videos)
+
+    if (result.videos.length < 12) {
+      data.value.status.hasMore = false
+    }
+  } finally {
     data.value.status.isProcessing = false
-    console.log('Прокрутка достигла конца страницы!')
   }
-}, false)
+}
 
 </script>
 
 <template>
+
   <div class="p-3 w-full">
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 h-auto">
-      <NotFound text="Нет видео с данной категорией" :isEmpty="data.status.isEmpty" />
-      <VideoCard :variant="false" :videos="data.videos" :isResponse="data.status.isResponse" />
+      <VideoSkeleton v-if="!data.status.isResponse && !data.status.isEmpty" v-for="index in 8" :key="index"/>
+      <VideoCard v-else-if="data.status.isResponse && !data.status.isEmpty" :variant="false" :videos="data.videos" :isResponse="data.status.isResponse" />
+      <NotFound v-else text="Нет видео с данной категорией" :isEmpty="data.status.isEmpty" />
+      <InfiniteScroll  v-if="!data.status.isEmpty" :loading="data.status.isProcessing" :has-more="data.status.hasMore" @load="loadMore" />
     </div>
   </div>
 </template>

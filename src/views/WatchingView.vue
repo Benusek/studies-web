@@ -1,12 +1,12 @@
 <script setup>
 
 import { useRoute } from 'vue-router'
-import {inject, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue'
+import {inject, onMounted, ref} from 'vue'
 import apiFetch from '@/helpers/apiFetch.js'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import Hls from 'hls.js'
-import VideoPreview from '@/components/Cards/VideoCard.vue'
+import VideoCard from '@/components/Cards/VideoCard.vue'
 import Plyr from 'plyr';
 import 'plyr/dist/plyr.css'
 import WatchingSkeleton from "@/components/Loaders/WatchingSkeleton.vue";
@@ -30,75 +30,56 @@ const id = inject('id')
 const avatar = inject('avatar')
 
 const isResponse = ref(false)
-const isReady = ref(false)
+
 const comments = ref([])
 const videoData = ref([])
+const player = ref(null)
+
+const isReady = ref(false)
+
+const initPlayer = (source) => {
+  const hls = new Hls()
+  hls.loadSource(source)
+  hls.attachMedia(player.value)
+  hls.on(Hls.Events.MANIFEST_PARSED, () => {
+    const qualities = [
+      ...new Set(
+          hls.levels.map(level => level.height)
+      )
+    ]
+
+    const plyr = new Plyr(player.value, {
+      settings: ['quality', 'speed'],
+      quality: {
+        default: Math.max(...qualities),
+        options: qualities,
+        forced: true,
+        onChange: quality => {
+          hls.currentLevel = hls.levels.findIndex(
+              level => level.height === quality
+          )
+        }
+      }
+    })
+  })
+  isReady.value = true
+}
 
 onMounted(async () => {
   const result = await apiFetch('GET', `/video/${videoId}`)
 
-  if (result) {
-    videoData.value = result
-    console.log(result)
-    document.title = result.video.title
-    isResponse.value = true
+  if (!result?.video) {
+    return
   }
+
+  videoData.value = result
+  document.title = result.video.title
+  isResponse.value = true
 
   await getComments()
-})
 
-let video = null
-let hls = null;
-const player = ref(null)
-
-watch(isResponse, async (value) => {
-  if (!value) return
-  await nextTick()
-  const src = `${api}/${videoData.value.video.video}`
-  if (Hls.isSupported()) {
-    hls = new Hls({ autoStartLoad: true })
-    const qualities = [...hls.levels.map(level => level.height)]
-    video = new Plyr(player.value, {
-      settings: ['quality', 'speed', 'loop'],
-      quality: {
-        default: qualities[qualities.length - 1],
-        options: qualities,
-        forced: true,
-        onChange: quality => {
-          const level = hls.levels.findIndex(item => item.height === quality)
-          if (level !== -1) {
-            hls.currentLevel = level
-          }
-        }
-      },
-      controls: [
-        'play',
-        'progress',
-        'current-time',
-        'mute',
-        'volume',
-        'settings',
-        'fullscreen'
-      ]
-    })
-
-    hls.attachMedia(player.value)
-    hls.on(Hls.Events.MEDIA_ATTACHED, () => {
-      hls.loadSource(src)
-    })
-
-    hls.on(Hls.Events.MANIFEST_PARSED, () => {
-      isReady.value = true
-    })
-  } else {
-    player.value.src = src
-    video = new Plyr(player.value)
-  }
-})
-
-onBeforeUnmount(() => {
-  video?.destroy()
-  hls?.destroy()
+  const source = `${api}/${videoData.value.video.video}`
+  initPlayer(source)
 })
 
 const getComments = async () => {
@@ -160,8 +141,28 @@ const answered = (index) => {
   <WatchingSkeleton v-if="!isResponse" />
   <div v-if="isResponse" class="flex flex-5 flex-col lg:flex-row p-2">
     <div class="px-2 flex flex-1 grow-[2.5] flex-col gap-4">
-      <div class="relative w-full bg-black rounded-lg overflow-hidden">
-        <video  ref="player" controls class="aspect-video inset-0 h-full w-full"/>
+      <div class="relative w-full overflow-hidden rounded-2xl bg-zinc-950 shadow-lg">
+        <div class="aspect-video">
+          <img
+              v-if="!isReady"
+              :src="`${api}/${videoData.video.thumbnail}`"
+              class="absolute inset-0 h-full w-full object-cover"
+              alt="thumbnail"
+          >
+
+          <div
+              v-if="!isReady"
+              class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+          />
+
+          <video
+              ref="player"
+              class="aspect-video h-full w-full opacity-0 transition-opacity duration-300"
+              :class="{ 'opacity-100': isReady }"
+              playsinline
+              controls
+          />
+        </div>
       </div>
       <h1 class="text-lg sm:text-xl lg:text-2xl font-semibold">
         {{ videoData.video.title }}
@@ -172,14 +173,13 @@ const answered = (index) => {
         <div class="flex items-center gap-3">
           <RouterLink :to="'/channel/' + videoData.video.user.id" class="flex items-center gap-3">
             <img class="size-12 rounded-full object-cover" :src="videoData.video.user.avatar
-            ? `${api}/${videoData.video.user.avatar}` : '/src/assets/default.png'">
+            ? `${api}/${videoData.video.user.avatar}` : '/src/assets/default.png'" alt="avatar">
             <div>
               <div class="font-medium">{{ videoData.video.user.name }}</div>
               <div class="text-sm text-zinc-500">{{ videoData.video.user.subscribers.count }} подписчиков</div>
             </div>
           </RouterLink>
-
-          <button v-if="videoData.video.user.id !== id && id" @click="FollowingUser"
+          <button v-if="videoData.video.user.id.toString() !== id && id" @click="FollowingUser"
                   class="h-10 rounded-xl px-4 text-sm cursor-pointer"
                   :class="videoData.video.user.subscribed ? 'border border-gray-300 text-zinc-900 hover:bg-zinc-100': 'bg-zinc-900 text-white font-medium'">
             {{ videoData.video.user.subscribed ? 'Отписаться' : 'Подписаться' }}
@@ -197,6 +197,12 @@ const answered = (index) => {
         <div class="whitespace-pre-wrap text-sm leading-relaxed">
           {{ videoData.video.description }}
         </div>
+        <div class="mt-2 flex gap-2" v-if="videoData.video.tags.length">
+          <span v-for="tag in videoData.video.tags" class="font-medium text-sm text-black">
+            #{{ tag.name }}
+          </span>
+        </div>
+
       </section>
       <div class="flex flex-col gap-2">
         <span class=" font-medium text-lg">Комментарии</span>
@@ -298,7 +304,7 @@ const answered = (index) => {
       </ul>
     </div>
     <div class="flex flex-1 flex-col gap-2 col-span-2" v-if="!isResponse || videoData.recommendations.length">
-      <VideoPreview :videos="videoData.recommendations" :isResponse="isResponse" />
+      <VideoCard :videos="videoData.recommendations" :isResponse="isResponse" />
     </div>
   </div>
 </template>

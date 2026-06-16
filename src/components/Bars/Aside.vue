@@ -30,80 +30,85 @@ const aside = ref({
 </script>
 
 <template>
-  <aside class="z-2 break-words font-medium transition-all duration-500">
-    <div
-      class="sticky justify-center top-16 sm:h-[calc(100vh-4rem)] overflow-auto sm:flex w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-      :class="{'': collapse, 'hidden': collapse}">
-      <ul class="flex flex-col pt-3.5 gap-10">
-        <li v-if="!collapse">
-          <RouterLink to="/">
-            <p class="text-md cursor-pointer ps-3.5">
+  <aside :class="[{'hidden sm:block': !collapse}]"
+      class="sticky top-26 sm:top-18 z-50 h-[calc(45dvh-1rem)] sm:h-[calc(100dvh-5rem)] bg-white overflow-scroll
+      rounded-2xl border border-gray-200 shadow-sm px-4 sm:m-2
+      [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <ul class="flex flex-col gap-4">
+        <li>
+          <div class="flex flex-col gap-2 py-2">
+            <p class="text-lg font-medium">
               Категории
             </p>
-          </RouterLink>
-          <div class="p-3">
             <input v-model="aside.query" type="text" placeholder="Категория"
                    class="bg-white text-xs rounded-lg border border-gray-300 p-1.5 w-full focus:border-gray-400 outline-none">
           </div>
+
           <div v-for="category in getFiltered(categories['all'], categories['current'], aside.query)"
                class="hover:bg-gray-200/60 active:bg-gray-200 cursor-pointer rounded-lg">
-            <RouterLink :to="`/category/${category.id}`" class="flex min-w-10 max-w-35 text-xs ps-5 py-1">
-              <span class="break-words line-clamp-1">{{ category.name }}</span>
+            <RouterLink :to="`/category/${category.id}`"
+                        class="flex text-sm p-2 group items-center rounded-lg
+                        hover:bg-neutral-100 transition-all duration-200"
+                        >
+              <span>{{ category.name }}</span>
             </RouterLink>
           </div>
         </li>
-        <li v-if="token && role === 1" class="flex flex-col gap-1">
+        <li v-if="token && role === 1" class="flex flex-col gap-2">
+          <p class="text-lg font-medium">
+            Аккаунт
+          </p>
+          <div>
             <RouterLink :to="`/channel/${id}`"
-                        class="rounded-lg flex items-center p-2 cursor-pointer hover:bg-gray-200/60 active:bg-gray-200"
-                        :class="{'flex-col gap-1' : collapse, 'gap-3 ps-4': !collapse}">
+                        class="flex min-w-10 text-sm p-2 group items-center rounded-lg
+                        hover:bg-neutral-100 transition-all duration-200 gap-3">
               <FontAwesomeIcon :icon="faUserCircle" />
-              <p :class="{'text-[8px]': collapse}" class="text-xs text-center">Вы</p>
+              <span>Профиль</span>
             </RouterLink>
 
             <RouterLink to="/playlists"
-                        class="rounded-lg flex items-center p-2 cursor-pointer hover:bg-gray-200/60 active:bg-gray-200"
-                        :class="{'flex-col gap-1' : collapse, 'gap-3 ps-4': !collapse}">
+                        class="flex min-w-10 text-sm p-2 group items-center rounded-lg
+                        hover:bg-neutral-100 transition-all duration-200 gap-3">
               <FontAwesomeIcon :icon="faList" />
-              <p :class="{'text-[8px]': collapse}" class="text-xs text-center">Плейлисты</p>
+              <span>
+                Плейлисты
+              </span>
             </RouterLink>
-
 
             <RouterLink to="/settings/"
-                        class="flex items-center p-2 cursor-pointer hover:bg-gray-200/60 active:bg-gray-200 rounded-lg"
-                        :class="{'flex-col gap-1' : collapse, 'gap-3 ps-4': !collapse}">
+                        class="flex min-w-10 text-sm p-2 group items-center rounded-lg
+                        hover:bg-neutral-100 transition-all duration-200 gap-3">
               <FontAwesomeIcon :icon="faGear" />
-              <p :class="{'text-[8px]': collapse}" class="text-xs text-center">Личный кабинет</p>
+              <span>Настройки</span>
             </RouterLink>
+          </div>
+
         </li>
-        <li v-if="token && role === 1 && subscribe.length" class="flex flex-col gap-1">
-          <span class="cursor-pointer"
-                      :class="{'flex justify-center': collapse}">
-            <p class="text-md" :class="collapse ? 'text-[10px]' : 'ps-3.5'">
-              Подписки</p>
-          </span>
+        <li v-if="token && role === 1 && subscribe.length" class="flex flex-col gap-2">
+          <p class="text-lg font-medium">
+            Подписки
+          </p>
           <div v-for="sub in aside.collapse?subscribe.slice(0, 3):subscribe">
-            <RouterLink :to="'/channel/' + sub.id" class="flex flex-row text-xs gap-2 items-center break-words overflow-hidden line-clamp-1 hover:bg-gray-100 p-1 rounded-lg"
-                        :class="{'justify-center': collapse, 'gap-3 ps-4': !collapse}">
+            <RouterLink :to="'/channel/' + sub.id" class="flex flex-row text-sm gap-2
+            items-center break-words overflow-hidden line-clamp-1 hover:bg-gray-100 rounded-lg gap-3 p-2">
               <img :src="sub.photo_file ? `${api}/${sub.photo_file}` : '/src/assets/default.png'" alt=""
                    class="rounded-full aspect-square text-lg w-7">
-              <span class="break-words line-clamp-1"
-                    v-if="!collapse">{{ sub.name }}</span>
+              <span class="break-words line-clamp-1">{{ sub.name }}</span>
             </RouterLink>
           </div>
           <div v-if="aside.collapse && subscribe.length > 3" @click="aside.collapse = false"
-               :class="!collapse ? 'shadow-xs' : 'shadow-sm rounded-sm mt-2'" class="flex flex-row p-2 border-b border-gray-200/80 hover:bg-gray-100
+               class="flex flex-row shadow-xs p-2 border-b border-gray-200/80 hover:bg-gray-100
                  text-xs font-sans cursor-pointer gap-3 transition-all duration-100 active:bg-gray-200">
             <FontAwesomeIcon :icon="faArrowDown" class="text-md ms-4" />
-            <span v-if="!collapse">Развернуть</span>
+            <span>Развернуть</span>
           </div>
           <div v-else-if="!aside.collapse && subscribe.length > 3" @click="aside.collapse = true"
-               :class="{'rounded-sm mt-2' : collapse}" class="flex flex-row p-2 border-b border-gray-200/80 hover:bg-gray-100
+               class="flex flex-row p-2 border-b border-gray-200/80 hover:bg-gray-100
                            text-xs font-sans cursor-pointer gap-3 items-center transition-all duration-100 active:bg-gray-200">
             <FontAwesomeIcon :icon="faArrowUp" class="text-md ms-4" />
-            <span v-if="!collapse">Свернуть</span>
+            <span>Свернуть</span>
           </div>
         </li>
       </ul>
-    </div>
   </aside>
 </template>

@@ -1,8 +1,7 @@
 <script setup>
-import { ref } from 'vue'
+import {ref} from 'vue'
 import {
   faCloudArrowUp,
-  faTrash,
   faXmark
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
@@ -10,8 +9,11 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 const dragover = ref(false)
 
 defineEmits(['change', 'remove'])
-
 defineProps({
+  errors: {
+    type: Array,
+    default: []
+  },
   file: Object,
   type: String,
   name: String
@@ -31,9 +33,8 @@ defineProps({
 
     <div
         class="relative overflow-hidden rounded-2xl border bg-white transition-all duration-200"
-        :class="dragover
-          ? 'border-indigo-500 ring-4 ring-indigo-100'
-          : 'border-zinc-200 hover:border-zinc-300'">
+        :class="[ dragover ? 'border-indigo-500 ring-4 ring-indigo-100' : '',
+        errors.length ? 'border-red-500 ring-4 ring-red-100' : 'border-zinc-200 hover:border-zinc-300' ]">
 
       <input
           type="file"
@@ -43,7 +44,7 @@ defineProps({
           :accept="['avatar','thumbnail'].includes(type) ? 'image/*' : 'video/*'"
           @change="$emit('change', $event, type, 'target')">
 
-      <template v-if="file[type + 'blob']">
+      <template v-if="file?.[type + 'blob']">
 
         <button
             type="button"
@@ -60,7 +61,6 @@ defineProps({
 
         <video
             v-else-if="type === 'video'"
-            :key="file[type + 'blob']"
             class="h-64 w-full bg-black object-contain"
             controls>
           <source :src="file[type + 'blob']">
@@ -87,25 +87,11 @@ defineProps({
             </div>
           </div>
 
-          <button
-              type="button"
-              @click.prevent="$emit('remove', type)"
-              class="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-red-500
-              hover:bg-red-50 transition cursor-pointer">
-
-            <FontAwesomeIcon :icon="faTrash"/>
-            <span>Удалить</span>
-
-          </button>
-
         </div>
 
       </template>
 
-      <div
-          v-else
-          class="flex flex-col items-center justify-center gap-4 p-4 text-center">
-
+      <div v-else class="flex flex-col items-center justify-center gap-4 p-4 text-center">
         <div>
           <div class="font-medium text-zinc-800">
             Перетащите файл сюда
@@ -116,11 +102,8 @@ defineProps({
           </div>
         </div>
 
-        <div
-            class="flex items-center gap-2 rounded-full bg-zinc-100 px-3 py-1.5 text-xs text-zinc-600">
-
+        <div class="flex items-center gap-2 rounded-full bg-zinc-100 px-3 py-1.5 text-xs text-zinc-600">
           <FontAwesomeIcon :icon="faCloudArrowUp"/>
-
           <span>
             {{
               type.includes('video')
@@ -134,6 +117,19 @@ defineProps({
       </div>
 
     </div>
+    <div
+        v-if="errors.length"
+        class="mt-2 space-y-1">
 
+      <p
+          v-for="error in errors"
+          :key="error"
+          class="text-sm text-red-500">
+
+        {{ error }}
+
+      </p>
+
+    </div>
   </label>
 </template>

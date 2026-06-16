@@ -6,6 +6,7 @@ import SettingsView from '@/views/SettingsView.vue'
 import SearchView from '@/views/SearchView.vue'
 import WatchingView from '@/views/WatchingView.vue'
 import PlaylistVideosView from '@/views/PlaylistVideosView.vue'
+import CreateVideoView from "@/views/CreateVideoView.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -63,6 +64,11 @@ const router = createRouter({
       name: 'playlist',
       component: PlaylistVideosView,
     },
+    {
+      path: '/video',
+      name: 'video',
+      component: CreateVideoView,
+    }
   ],
 })
 

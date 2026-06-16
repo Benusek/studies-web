@@ -49,11 +49,15 @@ const sendForm = async () => {
   data.value.edit.errors = {}
   const formData = new FormData()
   for (const key in data.value.edit.form) {
-    if (data.value.edit.form[key] !== data.value.user[key] && key !== 'photo_file') {
-      formData.append(key, data.value.edit.form[key])
-    } else if (key === 'photo_file' && data.value.edit.form.photo_file) {
-      console.log(data.value.edit.form.photo_file)
-      formData.append(key, data.value.edit.form[key])
+    const value = data.value.edit.form[key]
+    if (key === 'photo_file') {
+      if (value instanceof File) {
+        formData.append('photo_file', value)
+      }
+      continue
+    }
+    if (value !== data.value.user[key]) {
+      formData.append(key, value)
     }
   }
 

@@ -147,14 +147,9 @@ const timeupdateVideo = (video, el) => {
         <RouterLink :to="'/channel/' + video.user.id" class="block text-sm text-gray-600 mt-1">
           {{ video.user.name }}
         </RouterLink>
-        <div class="flex flex-wrap gap-2 mt-2">
-          <span class="px-2 py-0.5 text-xs rounded-full bg-indigo-100 text-indigo-700">
-            {{ video.category?.name }}
-          </span>
-          <span v-if="!video.public" class="px-2 py-0.5 text-xs rounded-full" :class="video.public ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'">
+        <span v-if="!video.public" class="px-2 py-0.5 text-xs rounded-full" :class="video.public ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'">
             Приватное
           </span>
-        </div>
         <div class="text-xs text-gray-500 mt-2"> {{ video.created_at }}</div>
       </div>
     </div>

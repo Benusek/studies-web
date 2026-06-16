@@ -3,13 +3,8 @@ import Error from '@/components/Modal/Error.vue'
 import { inject, ref } from 'vue'
 import apiFetch from '@/helpers/apiFetch.js'
 import { faCheck } from '@fortawesome/free-solid-svg-icons'
-import Loading from '@/components/Loaders/Loading.vue'
-import File from '@/components/Modal/File.vue'
-import Resumable from 'resumablejs'
+import File from '@/components/Modal/FileUpload.vue'
 
-const api = import.meta.env.VITE_APP_API
-
-const token = inject('token').value
 const updateToken = inject('updateToken')
 const showToast = inject('showToast')
 const getData = inject('getData')
@@ -22,19 +17,39 @@ const form = ref({
   progress: null
 })
 
-const emit = defineEmits(['exit'])
-const props = defineProps({
-  forms: Object
-})
-
+//TODO: Repeating from CreateVideoView.vue
 const changeFile = (event, key, target) => {
   if (event[target].files.length) {
     form.value.data[key] = event[target].files[0]
     form.value.data[key + 'name'] = event[target].files[0].name
-    if (form.value.data[key + 'blob']) URL.revokeObjectURL(form.value.data[key + 'blob'])
-    form.value.data[key + 'blob'] = URL.createObjectURL(event[target].files[0])
+
+    if (form.value.data[key + 'blob']) {
+      URL.revokeObjectURL(form.value.data[key + 'blob'])
+    }
+
+    form.value.data[key + 'blob'] =
+        URL.createObjectURL(event[target].files[0])
   }
 }
+
+const removeFile = (key) => {
+  if (form.value.data[key + 'blob']) {
+    URL.revokeObjectURL(form.value.data[key + 'blob'])
+  }
+
+  delete form.value.data[key]
+  delete form.value.data[key + 'blob']
+  delete form.value.data[key + 'name']
+
+  if (form.value.errors[key]) {
+    delete form.value.errors[key]
+  }
+}
+
+const emit = defineEmits(['exit'])
+const props = defineProps({
+  forms: Object
+})
 
 const post = async () => {
   if (form.value.isProcess) return
@@ -48,86 +63,21 @@ const post = async () => {
       console.log(key, form.value.data[key])
     }
   }
+  const result = await apiFetch(props.forms.method, props.forms.route, formData)
 
-  switch (props.forms['route']) {
-    case '/video': {
-      formData.delete('video')
-      if (formData.get('public')) {
-        formData.append('public', 1)
-      } else formData.append('public', 0)
-      const result = await apiFetch('POST', '/meta', formData)
-      console.log(formData.get('category_id'))
+  if (result.error?.message && !result.error?.errors) {
+    form.value.errors.password = [result.error.message]
+    form.value.errors.login = []
+  } else if (result.error?.message && result.error?.errors) {
+    form.value.errors = result.error.errors
+  }
 
-      if (result.errors) {
-        form.value.errors = result['errors']
-        break
-      }
-
-      const meta = result.data['upload_token']
-      const r = new Resumable({
-        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
-        target: `${api}/api/video`,
-        chunkSize: 10 * 1024 * 1024,
-        testChunks: false,
-        maxChunkRetries: 0,
-        query: { 'upload_token': meta }
-      })
-      console.log('UPLOAD START')
-      r.addFile(form.value.data['video'])
-      r.on('fileAdded', function(file, event) {
-        console.log('FILE ADDED')
-        r.upload()
-      })
-      r.on('fileProgress', file => {
-        form.value.progress = Math.floor(file.progress(true) * 100)
-
-        form.value.uploaded =
-            Math.floor(file.size * file.progress(true) / 1024 / 1024)
-
-        form.value.total = file.size / 1024 / 1024
-      })
-      r.on('fileError', function(file, err) {
-        try {
-          const response = JSON.parse(err)
-
-          form.value.errors = response.errors || {
-            common: [response.message || 'Ошибка загрузки']
-          }
-        } catch {
-          form.value.errors = {
-            common: ['Внутренняя ошибка сервера']
-          }
-        }
-
-        console.error(err)
-      })
-      r.on('chunkingError', function(file, message) {
-        console.error('Chunk error:', message)
-      })
-      r.on('fileSuccess', function(file, message) {
-        exit(JSON.parse(message).data)
-      })
-      break
+  if (result.data) {
+    if (result.data.user_token) {
+      updateToken(result.data.user_token)
+      getData(result.data.user)
     }
-    default: {
-      const result = await apiFetch(props.forms.method, props.forms.route, formData)
-
-      if (result.error?.message && !result.error?.errors) {
-        form.value.errors.password = [result.error.message]
-        form.value.errors.login = []
-      } else if (result.error?.message && result.error?.errors) {
-        form.value.errors = result.error.errors
-      }
-
-      if (result.data) {
-        if (result.data.user_token) {
-          updateToken(result.data.user_token)
-          getData(result.data.user)
-        }
-        exit(result.data.message)
-      }
-      break
-    }
+    exit(result.data.message)
   }
   form.value.isProcess = false
 }
@@ -173,7 +123,7 @@ const exit = (message) => {
             :class="{'border border-red-600/70': form.errors[input.code], 'w-auto': input.type.includes('checkbox'), 'peer w-full': !input.type.includes('checkbox')}"
             :autocomplete="input.type.includes('password') ? 'on' : null">
       </div>
-      <File v-else :file="form.data" :type="input.code" :name="input.label" @change="changeFile"/>
+      <File v-else :file="form.data" :type="input.code" :name="input.label" @change="changeFile" @remove="removeFile"/>
       <Error :errors="form.errors[input.code]" />
     </li>
     <div v-if="form.progress !== 100 & form.progress !== null" class="space-y-2 col-span-full">
@@ -189,9 +139,8 @@ const exit = (message) => {
       </div>
     </div>
     <button :disabled="form.isProcess"
-            class="relative w-full bg-indigo-600 rounded-lg p-1.5 items-center text-white font-medium cursor-pointer hover:bg-indigo-700 col-span-full">
-      <span v-if="!form.isProcess">{{ forms['submit'] }}</span>
-      <Loading v-else :size="6" />
+            class="relative disabled:opacity-70 w-full bg-indigo-600 rounded-lg p-1.5 items-center text-white font-medium cursor-pointer hover:bg-indigo-700 col-span-full">
+      <span>{{ forms['submit'] }}</span>
     </button>
   </form>
 </template>

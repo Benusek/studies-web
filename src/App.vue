@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeMount, onMounted, provide, ref } from 'vue'
+import {computed, onBeforeMount, onMounted, onUnmounted, provide, ref} from 'vue'
 import apiFetch from '@/helpers/apiFetch.js'
 import Toast from '@/components/Toast.vue'
 import Form from '@/components/Form.vue'
@@ -9,6 +9,7 @@ import Aside from '@/components/Bars/Aside.vue'
 import PlaylistMenu from '@/components/Modal/PlaylistMenu.vue'
 import { useRoute } from 'vue-router'
 
+const route = useRoute()
 const categories = ref({
   all: [],
   current: []
@@ -76,45 +77,6 @@ const forms = [
     ]
   },
   {
-    label: 'Добавление видео',
-    submit: 'Добавить',
-    method: 'POST',
-    route: '/video',
-    inputs: [
-      {
-        label: 'Название',
-        code: 'title',
-        type: 'text'
-      },
-      {
-        label: 'Описание',
-        code: 'description',
-        type: 'text'
-      },
-      {
-        label: 'Превью *',
-        code: 'thumbnail',
-        type: 'file'
-      },
-      {
-        label: 'Видео',
-        code: 'video',
-        type: 'file'
-      },
-      {
-        label: 'Категория *',
-        code: 'category_id',
-        type: 'select',
-        options: []
-      },
-      {
-        label: 'Публичное *',
-        code: 'public',
-        type: 'checkbox'
-      }
-    ]
-  },
-  {
     label: 'Создание плейлиста',
     submit: 'Создать',
     method: 'POST',
@@ -140,7 +102,7 @@ const data = ref({
   modal: {},
   toast: {},
   user: {},
-  aside: false,
+  aside: true,
   playlists: []
 })
 
@@ -148,12 +110,8 @@ onMounted(() => {
   process(async () => {
     const response = await apiFetch('GET', `/category`)
     if (response) {
-      categories.value.all = categories.value.current = response
-      forms[2].inputs[4].options = categories.value.all.map(category => ({
-            value: category.id,
-            label: category.name
-          })
-      )
+      categories.value.all = response
+      categories.value.current = [...response]
     }
 
     if (token.value) {
@@ -175,7 +133,7 @@ const clickOutside = (target, btn, callback) => {
     window.addEventListener('click', listener)
   })
 
-  onBeforeMount(() => {
+  onUnmounted(() => {
     window.removeEventListener('click', listener)
   })
 
@@ -279,11 +237,14 @@ const openModal = (num) => {
 
 <template>
   <Header @modal="openModal" :user="data.user" :role="data.user.role_id" @toggle="toggle" @out="clickOutside" :loading="data.isProcessing" />
-  <template class="flex flex-col sm:flex-row">
+  <div class="flex flex-col sm:flex-row">
     <Aside :token="token" :role="data.user.role_id" :categories="categories" :subscribe="data.user.subscribe"
            :collapse="data.aside" />
-    <RouterView :key="useRoute().fullPath" />
-  </template>
+    <main class="flex-1 min-w-0">
+      <RouterView :key="route.fullPath"/>
+    </main>
+  </div>
+
   <transition
     enter-active-class="transition ease-in-out duration-200 transform"
     enter-from-class="opacity-0"
@@ -291,8 +252,9 @@ const openModal = (num) => {
     leave-active-class="ease-in duration-100"
     leave-from-class="opacity-100"
     leave-to-class="opacity-0">
+
     <Modal v-show="true" v-if="data.modal.active"
-           :label="!data.modal.number && data.modal.number !== 0?null:forms[data.modal.number].label"
+           :label="forms[data.modal.number]?.label"
            @exit="exit('modal')">
       <PlaylistMenu v-if="!data.modal.number && data.modal.number !== 0" :playlists="data.playlists"
                     :loading="data.isProcessing"

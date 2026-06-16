@@ -50,50 +50,59 @@ const logout = async () => {
 }
 
 const sendSearch = async () => {
-  if (header.value.search.value) {
-    await router.replace(`/search/${header.value.search.value}`)
-  }
+  const query = header.value.search.value?.trim()
+
+  if (!query) return
+
+  await router.push({
+    path: `/search/${encodeURIComponent(query)}`
+  })
 }
 
 </script>
 
 <template>
-  <header class="sticky top-0 z-3 select-none">
+  <header class="sticky top-0 z-50 select-none">
     <nav class="bg-zinc-900 text-white">
       <ul class="flex justify-between items-center gap-3 p-2 w-full">
-        <li class="flex sm:flex flex-row items-center gap-2 cursor-pointer justify-center"
-            :class="{'hidden': header.search.expansions}">
-          <FontAwesomeIcon :icon="faBars" class="text text-md px-4" @click="$emit('toggle','aside')" />
-          <RouterLink to="/" class="flex flex-row items-center gap-1 cursor-pointer">
-            <p class="font-pac">Studies</p>
+        <li class="flex flex-row items-center gap-2 cursor-pointer justify-center">
+          <div class="block sm:hidden" :class="[{'hidden': header.search.expansions}, {'sm:block': !header.search.expansions}]">
+            <FontAwesomeIcon :icon="faBars" class="text-md px-4" @click="$emit('toggle','aside')" />
+          </div>
+          <RouterLink to="/" :class="[{'hidden sm:block': header.search.expansions}, {'sm:block': !header.search.expansions}]">
+            <p class="font-pac sm:px-6 text-xl">Studies</p>
           </RouterLink>
         </li>
         <li class="flex-1 max-w-3xl mx-2" :class="{ 'w-full': header.search.expansions }">
-
           <form @submit.prevent="sendSearch" class="flex items-center">
             <button @click="header.search.expansions = false" v-if="header.search.expansions"
                     class="sm:hidden flex items-center justify-center mr-2 size-10 rounded-full hover:bg-zinc-800 transition">
               <FontAwesomeIcon :icon="faArrowLeft" />
             </button>
-            <div class="relative flex-1">
+            <div class="relative flex-1 sm:block" :class="[{'block':header.search.expansions}, {'hidden':!header.search.expansions}]">
               <FontAwesomeIcon :icon="faSearch" class="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
               <input
                   v-model="header.search.value"
                   type="search"
                   placeholder="Поиск видео, плейлистов..."
-                  class="w-full h-11 bg-zinc-800 border border-zinc-700 rounded-l-full pl-11 pr-4 text-sm text-white
+                  class=" w-full h-11 bg-zinc-800 border border-zinc-700 rounded-l-full pl-11 pr-4 text-sm text-white
                  placeholder:text-zinc-500 outline-none transition" />
             </div>
-            <button type="submit" class="xs:hidden sm:block h-11 px-5 rounded-r-full border border-l-0 border-zinc-700 bg-zinc-800
-               hover:bg-zinc-700 active:bg-zinc-600 transition">
+            <button type="submit" class="sm:block h-11 px-5 rounded-r-full border border-l-0 border-zinc-700 bg-zinc-800
+               hover:bg-zinc-700 active:bg-zinc-600 transition"
+                    :class="[{'block':header.search.expansions}, {'hidden':!header.search.expansions}]">
               <FontAwesomeIcon :icon="faSearch" class="text-zinc-300" />
             </button>
           </form>
         </li>
         <li>
-          <button @click="collapse= !collapse" :class="{'hidden': !header.search.expansions}" ref="btn"
+          <button @click="collapse= !collapse" :class="{'hidden': header.search.expansions}" ref="btn"
                   class="flex sm:flex justify-center items-center cursor-pointer p-2 w-10 h-10">
             <FontAwesomeIcon :icon="faUser" class="text-lg" />
+          </button>
+          <button @click="header.search.expansions = true"  :class="[{'hidden':header.search.expansions}, {'block':!header.search.expansions}]"
+                  class="block sm:hidden sm:block h-11 px-2">
+            <FontAwesomeIcon :icon="faSearch" class="text-zinc-300" />
           </button>
         </li>
       </ul>
@@ -141,16 +150,18 @@ const sendSearch = async () => {
             <span>Личный кабинет</span>
           </RouterLink>
         </li>
-        <li v-if="token && role === 1" @click="$emit('modal', 3)" class="flex items-center gap-3
+        <li v-if="token && role === 1" @click="$emit('modal', 2)" class="flex items-center gap-3
         px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors">
           <FontAwesomeIcon :icon="faPlus" class="w-4 text-gray-500" />
           <span>Создать плейлист</span>
         </li>
 
-        <li v-if="token && role === 1" @click="$emit('modal', 2)" class="flex items-center
-         gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors">
-          <FontAwesomeIcon :icon="faFileCirclePlus" class="w-4 text-gray-500" />
-          <span>Загрузить видео</span>
+        <li v-if="token && role === 1">
+          <RouterLink to="/video"
+          class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+            <FontAwesomeIcon :icon="faFileCirclePlus" class="w-4 text-gray-500" />
+            <span>Загрузить видео</span>
+          </RouterLink>
         </li>
 
         <li v-if="token && role === 1">

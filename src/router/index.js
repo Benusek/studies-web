@@ -68,6 +68,9 @@ const router = createRouter({
       path: '/video',
       name: 'video',
       component: CreateVideoView,
+      meta: {
+        forAuth: true
+      }
     }
   ],
 })

@@ -32,7 +32,7 @@ const switchPage = async (value) => {
         data.value = videos
         console.log(videos)
       }
-      if (!videos.videos.length || videos.data) {
+      if (!videos?.videos?.length || videos?.data) {
         isEmpty.value = true
         text.value = 'Список видео пуст'
       }
@@ -68,7 +68,8 @@ const FollowingUser = async () => {
     }
   }
 }
-
+//TODO: ABSENT PAGINATION
+//TODO: ABSENT SEARCHING
 </script>
 
 <template>
@@ -90,7 +91,7 @@ const FollowingUser = async () => {
           </div>
 
         </div>
-        <template v-if="id !== data.user.id.toString() && id">
+        <template v-if="id !== data.user.id && id">
           <button v-if="!data.user.subscribed" @click="FollowingUser"
               class="h-11 rounded-xl bg-zinc-900 px-5 text-sm font-medium text-white transition
               cursor-pointer hover:bg-zinc-800">

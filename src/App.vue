@@ -1,8 +1,8 @@
 <script setup>
 import {computed, onBeforeMount, onMounted, onUnmounted, provide, ref} from 'vue'
 import apiFetch from '@/helpers/apiFetch.js'
-import Toast from '@/components/Toast.vue'
-import Form from '@/components/Form.vue'
+import Toast from '@/components/Form/Toast.vue'
+import Form from '@/components/Form/Form.vue'
 import Modal from '@/components/Modal/Modal.vue'
 import Header from '@/components/Bars/Header.vue'
 import Aside from '@/components/Bars/Aside.vue'
@@ -102,7 +102,7 @@ const data = ref({
   modal: {},
   toast: {},
   user: {},
-  aside: true,
+  aside: false,
   playlists: []
 })
 
@@ -151,6 +151,7 @@ const getUserData = async (result) => {
     data.value.user[key] = result[key]
     !key.includes('subscribe') && !key.includes('subscribers') ? localStorage.setItem(key, result[key]) : null
   })
+  id.value = result.id
 }
 
 const process = async (func) => {
@@ -216,7 +217,7 @@ const storeLink = (num) => {
 const avatar = computed(() => data.value.user.photo_file)
 provide('token', token)
 provide('avatar', avatar)
-provide('id', id.value)
+provide('id', id)
 
 provide('getData', getUserData)
 provide('updateToken', updateToken)
@@ -253,7 +254,7 @@ const openModal = (num) => {
     leave-from-class="opacity-100"
     leave-to-class="opacity-0">
 
-    <Modal v-show="true" v-if="data.modal.active"
+    <Modal v-if="data.modal.active"
            :label="forms[data.modal.number]?.label"
            @exit="exit('modal')">
       <PlaylistMenu v-if="!data.modal.number && data.modal.number !== 0" :playlists="data.playlists"

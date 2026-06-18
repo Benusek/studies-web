@@ -6,6 +6,9 @@ import Error from "@/components/Modal/Error.vue";
 import apiFetch from "@/helpers/apiFetch.js";
 import Resumable from "resumablejs";
 import {faCheck} from "@fortawesome/free-solid-svg-icons";
+import toggleArray from "@/helpers/toggleTag.js";
+import {changeFile, removeFile} from '@/helpers/fileHandler.js'
+import Privacy from "@/components/Form/Privacy.vue";
 
 const tags = ref([])
 const token = inject('token')
@@ -36,48 +39,6 @@ onMounted(async () => {
     categories.value = category
   }
 })
-
-const toggleTag = (id) => {
-  if (!form.value.data.tags) {
-    form.value.data.tags = []
-  }
-
-  const index = form.value.data.tags.indexOf(id)
-
-  if (index === -1) {
-    form.value.data.tags.push(id)
-  } else {
-    form.value.data.tags.splice(index, 1)
-  }
-}
-
-const changeFile = (event, key, target) => {
-  if (event[target].files.length) {
-    form.value.data[key] = event[target].files[0]
-    form.value.data[key + 'name'] = event[target].files[0].name
-
-    if (form.value.data[key + 'blob']) {
-      URL.revokeObjectURL(form.value.data[key + 'blob'])
-    }
-
-    form.value.data[key + 'blob'] =
-        URL.createObjectURL(event[target].files[0])
-  }
-}
-
-const removeFile = (key) => {
-  if (form.value.data[key + 'blob']) {
-    URL.revokeObjectURL(form.value.data[key + 'blob'])
-  }
-
-  delete form.value.data[key]
-  delete form.value.data[key + 'blob']
-  delete form.value.data[key + 'name']
-
-  if (form.value.errors[key]) {
-    delete form.value.errors[key]
-  }
-}
 
 const post = async () => {
   if (form.value.isProcess) return
@@ -250,29 +211,14 @@ const post = async () => {
                   : 'bg-white border-zinc-300 text-zinc-700 hover:border-indigo-500'"
                 class="px-3 py-2 rounded-full border text-sm transition cursor-pointer"
                 type="button"
-                @click="toggleTag(tag.id)">
+                @click="toggleArray(tag.id)">
               #{{ tag.name }}
             </button>
           </div>
           <Error :errors="form.errors.tags"/>
         </div>
 
-        <div class="rounded-3xl border border-zinc-200 bg-white p-6">
-          <h2 class="text-lg font-semibold mb-5">
-            Публикация
-          </h2>
-          <label class="flex items-center justify-between cursor-pointer select-none">
-            <div>
-              <div class="font-medium">
-                Публичное видео
-              </div>
-              <div class="text-sm text-zinc-500 mt-1">
-                Видео будет отображаться всем пользователям
-              </div>
-            </div>
-            <input v-model="form.data.public" class="size-5 accent-indigo-600" type="checkbox">
-          </label>
-        </div>
+        <Privacy :data="form.data"/>
 
         <button :disabled="form.isProcess" class="w-full h-12 rounded-2xl bg-zinc-900 text-white font-medium
                    hover:bg-zinc-800 disabled:opacity-50 transition cursor-pointer" @click="post">

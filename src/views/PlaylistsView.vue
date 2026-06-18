@@ -21,12 +21,10 @@ const pickPlaylists = async (menu) => {
   data.value.menu = menu
   switch (menu) {
     case 1:
-      const my = await apiFetch('GET', `/user/${localStorage.getItem('id')}/playlist`)
-      examResult(my)
+      examResult(await apiFetch('GET', `/user/${localStorage.getItem('id')}/playlist`))
       break
     case 2:
-      const other = await apiFetch('GET', `/user/${localStorage.getItem('id')}/collections`)
-      examResult(other)
+      examResult(await apiFetch('GET', `/user/${localStorage.getItem('id')}/collections`))
       break
   }
 
@@ -39,13 +37,19 @@ const examResult = (result) => {
     data.value.isEmpty = false
   }
 
+  if (result.playlists?.length < 1) {
+    data.value.isEmpty = true
+  }
   if (result.data) {
+    console.log(result.data)
     data.value.isEmpty = true
     data.value.playlists = []
   }
-  console.log(result)
 }
 
+//TODO: ABSENT PAGINATION
+//TODO: ABSENT SEARCHING
+//TODO: ADDING COLLECTION
 </script>
 
 <template>

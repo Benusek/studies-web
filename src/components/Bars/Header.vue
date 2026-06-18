@@ -15,6 +15,7 @@ import router from '@/router/index.js'
 import { inject, ref } from 'vue'
 const api = import.meta.env.VITE_APP_API
 const emit = defineEmits(['modal', 'toggle', 'out'])
+
 defineProps({
   role: Number,
   user: {
@@ -62,7 +63,7 @@ const sendSearch = async () => {
 </script>
 
 <template>
-  <header class="sticky top-0 z-50 select-none">
+  <header class="sticky top-0 z-99 select-none">
     <nav class="bg-zinc-900 text-white">
       <ul class="flex justify-between items-center gap-3 p-2 w-full">
         <li class="flex flex-row items-center gap-2 cursor-pointer justify-center">
@@ -157,7 +158,7 @@ const sendSearch = async () => {
         </li>
 
         <li v-if="token && role === 1">
-          <RouterLink to="/video"
+          <RouterLink to="/video/create"
           class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
             <FontAwesomeIcon :icon="faFileCirclePlus" class="w-4 text-gray-500" />
             <span>Загрузить видео</span>

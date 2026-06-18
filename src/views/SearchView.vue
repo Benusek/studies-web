@@ -237,60 +237,72 @@ const toggleTag = (tag) => {
       <span class="font-medium text-xs">Фильтр</span>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
-      <ul class="col-span-full grid lg:grid-cols-3 gap-6 p-5 rounded-3xl border border-zinc-200 bg-white shadow-sm"
-          v-if="data.status.isFilter">
-          <li class="flex flex-col p-4 gap-2">
-            <input v-model="data.filter.categoryQuery" type="text" placeholder="Категория"
-                   class="w-full px-2 py-1.5 text-sm bg-white rounded-xl border border-zinc-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none"
-                   @input="data.filter.categories = getFiltered(data.filter.allCategories,data.filter.categoryQuery)"/>
-            <div class="flex flex-wrap gap-2">
-              <label :for="`category${category.id}`" v-for="category in data.filter.categories" :key="category.id"
-                     class="px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition"
-                     :class="category.isChecked ? 'bg-zinc-900 text-white': 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'"
-                     @click="toggleCategory(category)">
-                <span class="text-xs break-words line-clamp-1">{{ category.name }}</span>
-              </label>
-            </div>
-          </li>
-          <li class="flex flex-col p-4 gap-2">
-            <input v-model="data.filter.tagQuery" type="text" placeholder="Тег"
-                   class="w-full px-2 py-1.5 text-sm bg-white rounded-xl border border-zinc-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none"
-                   @input="data.filter.tags = getFiltered(data.filter.allTags, data.filter.tagQuery)">
-            <div class="flex flex-wrap gap-1 select-none">
-              <label :for="`tag${tag.id}`" v-for="tag in data.filter.tags"  class="px-3 py-1 rounded-full text-xs font-medium cursor-pointer transition"
-                     :class="tag.isChecked ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'"
-                     @click="toggleTag(tag)">
-                <span class="break-words line-clamp-1">#{{ tag.name }}</span>
-              </label>
-            </div>
-          </li>
-          <li class="flex flex-col p-4 items-start gap-2 font-medium text-gray-500 select-none">
-            <span class="font-medium text-sm mb-0 text-gray-600">Тип</span>
-            <label for="all" class="flex gap-2 text-xs cursor-pointer" @click="data.form.type = 'all'">
-              <input type="radio" checked ref="all" name="type" id="all"
-                     class="checked:accent-zinc-900 peer cursor-pointer">
-              <span class="peer-checked:text-zinc-500">Все</span>
+      <ul v-if="data.status.isFilter" class="col-span-full grid lg:grid-cols-3 gap-5 rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm">
+
+        <li class="flex flex-col gap-4 rounded-2xl bg-zinc-50 p-4">
+          <h3 class="text-sm font-semibold text-zinc-900">
+            Категории
+          </h3>
+
+          <input v-model="data.filter.categoryQuery" type="text" placeholder="Поиск категории" class="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none transition-all focus:border-zinc-300" @input="data.filter.categories = getFiltered(data.filter.allCategories, data.filter.categoryQuery)">
+
+          <div class="flex flex-wrap gap-2">
+            <label v-for="category in data.filter.categories" :key="category.id" :for="`category${category.id}`" class="cursor-pointer rounded-full px-3 py-2 text-sm font-medium transition-colors" :class="category.isChecked ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-700 border border-zinc-200 hover:bg-zinc-100'" @click="toggleCategory(category)">
+        <span class="line-clamp-1">
+          {{ category.name }}
+        </span>
             </label>
-            <label for="video" class="flex gap-2 text-xs cursor-pointer" @click="data.form.type = 'video'">
-              <input type="radio" name="type" id="video" class="checked:accent-zinc-500 peer cursor-pointer">
-              <span class="peer-checked:text-zinc-900">Видео</span>
+          </div>
+        </li>
+
+        <li class="flex flex-col gap-4 rounded-2xl bg-zinc-50 p-4">
+          <h3 class="text-sm font-semibold text-zinc-900">
+            Теги
+          </h3>
+
+          <input v-model="data.filter.tagQuery" type="text" placeholder="Поиск тега" class="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none transition-all focus:border-zinc-300" @input="data.filter.tags = getFiltered(data.filter.allTags, data.filter.tagQuery)">
+          <div class="flex flex-wrap gap-2">
+            <label v-for="tag in data.filter.tags" :key="tag.id" :for="`tag${tag.id}`" class="cursor-pointer rounded-full px-3 py-2 text-sm font-medium transition-colors" :class="tag.isChecked ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-700 border border-zinc-200 hover:bg-zinc-100'" @click="toggleTag(tag)">
+        <span class="line-clamp-1">
+          #{{ tag.name }}
+        </span>
             </label>
-            <label for="playlist" class="flex gap-2 text-xs cursor-pointer" @click="data.form.type = 'playlist'">
-              <input type="radio" name="type" id="playlist" class="checked:accent-zinc-500 peer cursor-pointer">
-              <span class="peer-checked:text-zinc-900">Плейлист</span>
-            </label>
-          </li>
-          <li class="col-span-full flex justify-end gap-3 border-t border-zinc-200 p-4">
-            <button @click.prevent="resetFilter()"
-                    class="px-2 py-1.5 font-medium text-sm text-gray-500 hover:bg-gray-100 rounded-sm cursor-pointer active:bg-gray-200">
-              Сбросить
-            </button>
-            <button @click.prevent="loadMore(true)"
-                    class="p-1.5 bg-gray-900 rounded-lg text-white text-xs font-medium cursor-pointer hover:bg-gray-800 active:bg-gray-700">
-              Подтвердить
-            </button>
-          </li>
-        </ul>
+          </div>
+        </li>
+
+        <li class="flex flex-col gap-4 rounded-2xl bg-zinc-50 p-4">
+          <h3 class="text-sm font-semibold text-zinc-900">
+            Тип контента
+          </h3>
+          <label for="all" class="flex items-center gap-3 rounded-xl px-3 py-2 cursor-pointer hover:bg-white transition-colors" @click="data.form.type = 'all'">
+            <input type="radio" checked ref="all" id="all" name="type" class="accent-zinc-900 cursor-pointer">
+            <span class="text-sm text-zinc-700">
+              Все
+            </span>
+          </label>
+          <label for="video" class="flex items-center gap-3 rounded-xl px-3 py-2 cursor-pointer hover:bg-white transition-colors" @click="data.form.type = 'video'">
+            <input type="radio" id="video" name="type" class="accent-zinc-900 cursor-pointer">
+            <span class="text-sm text-zinc-700">
+              Видео
+            </span>
+          </label>
+          <label for="playlist" class="flex items-center gap-3 rounded-xl px-3 py-2 cursor-pointer hover:bg-white transition-colors" @click="data.form.type = 'playlist'">
+            <input type="radio" id="playlist" name="type" class="accent-zinc-900 cursor-pointer">
+            <span class="text-sm text-zinc-700">
+              Плейлисты
+            </span>
+          </label>
+        </li>
+        <li class="col-span-full flex items-center justify-end gap-3 border-t border-zinc-200 pt-5">
+          <button @click.prevent="resetFilter()" class="rounded-xl px-4 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 active:bg-zinc-200">
+            Сбросить
+          </button>
+          <button @click.prevent="loadMore(true)" class="rounded-xl bg-zinc-900 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 active:bg-zinc-700">
+            Применить фильтры
+          </button>
+        </li>
+      </ul>
+
       <h2 v-if="data.response.playlists?.items?.length || data.response.videos?.items?.length" class="font-semibold text-lg col-span-full mt-4">
         Результаты
       </h2>

@@ -19,7 +19,7 @@ defineProps({
         <div class="absolute inset-0 translate-y-1.5 scale-[0.96] rounded-2xl bg-sky-300/70" />
         <div class="relative h-full overflow-hidden rounded-2xl bg-zinc-900 shadow-lg">
           <div class="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
-              :style="{ backgroundImage: playlist.videos?.[playlist.videos.length - 1].thumbnail ? `url('${api}/${playlist.videos[playlist.videos.length - 1].thumbnail}')`
+              :style="{ backgroundImage: playlist.videos?.[playlist.videos.length - 1].thumbnail ? `url('${api}/${playlist.videos?.[playlist.videos.length - 1].thumbnail}')`
               : 'url(/src/assets/playlist-placeholder.jpg)'}"/>
           <div class="absolute inset-0 bg-black/0 group-hover:bg-black/55
           transition-all duration-300 flex items-center justify-center">
@@ -47,12 +47,6 @@ defineProps({
         <RouterLink :to="'/channel/' + playlist.user.id" class="block text-sm text-gray-600 mt-1">
           {{ playlist.user.name }}
         </RouterLink>
-        <div class="flex flex-wrap gap-2 mt-2">
-          <span class="px-2 py-0.5 text-xs rounded-full"
-                :class="playlist.public ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'">
-            {{ playlist.public ? 'Публичное' : 'Приватное' }}
-          </span>
-        </div>
         <div class="text-xs text-gray-500 mt-2"> {{ playlist.created_at }}</div>
       </div>
     </div>

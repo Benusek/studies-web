@@ -7,6 +7,8 @@ import SearchView from '@/views/SearchView.vue'
 import WatchingView from '@/views/WatchingView.vue'
 import PlaylistVideosView from '@/views/PlaylistVideosView.vue'
 import CreateVideoView from "@/views/CreateVideoView.vue";
+import EditVideoView from "@/views/EditVideoView.vue";
+import EditPlaylistView from "@/views/EditPlaylistView.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -65,9 +67,25 @@ const router = createRouter({
       component: PlaylistVideosView,
     },
     {
-      path: '/video',
+      path: '/video/create',
       name: 'video',
       component: CreateVideoView,
+      meta: {
+        forAuth: true
+      }
+    },
+    {
+      path: '/video/:id/edit',
+      name: 'videoEdit',
+      component: EditVideoView,
+      meta: {
+        forAuth: true
+      }
+    },
+    {
+      path: '/playlist/:id/edit',
+      name: 'playlistEdit',
+      component: EditPlaylistView,
       meta: {
         forAuth: true
       }

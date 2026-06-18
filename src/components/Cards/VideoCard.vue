@@ -1,4 +1,4 @@
-<script setup> import {faList, faVolumeHigh, faVolumeXmark} from '@fortawesome/free-solid-svg-icons'
+<script setup> import {faList, faVolumeHigh, faVolumeXmark, faPen} from '@fortawesome/free-solid-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 import {inject, ref, watch} from 'vue'
 import Hls from 'hls.js'
@@ -26,6 +26,7 @@ const toggleMutedVideo = (video, el) => {
       break
   }
 }
+//TODO: Some repeating form EditVideoView.vue
 const setDurationVideo = (video, offset = null) => {
   const duration = video.duration / 1000
   let seconds = Math.max(0, Math.floor(offset ? duration - offset : duration))
@@ -101,6 +102,14 @@ const timeupdateVideo = (video, el) => {
        class="group p-2 overflow-hidden rounded-2xl cursor-point"
        :class="{'flex gap-4 items-start': variant}">
     <div class="relative" :class="{' w-42 shrink-0': variant,'w-full': !variant}">
+      <RouterLink :to="`/video/${video.id}/edit`" v-if="id && id === video.user.id">
+        <FontAwesomeIcon
+            class="absolute rounded-full top-0 left-10 m-2 w-4 h-1 text-white p-2 font-medium bg-black/50"
+            :icon="faPen"/>
+      </RouterLink>
+      <FontAwesomeIcon v-if="id" @click="getVideoPlaylists(video)"
+                       class="absolute rounded-full top-0 m-2 w-4 left-0 h-1 text-white p-2 font-medium bg-black/50"
+                       :icon="faList"/>
       <div v-show="!video.isHover"
           class="aspect-[16/9] bg-center bg-contain bg-no-repeat bg-black rounded-lg"
           :style="`background-image: url(${api}/${video.thumbnail})`"
@@ -124,9 +133,6 @@ const timeupdateVideo = (video, el) => {
                            class="absolute rounded-full top-0 m-2 w-4 right-0 h-1 text-white p-2 font-medium bg-black/50"
                            :icon="faVolumeHigh"/>
         </template>
-        <FontAwesomeIcon v-if="id" @click="getVideoPlaylists(video)"
-                         class="absolute rounded-full top-0 m-2 w-4 right-10 h-1 text-white p-2 font-medium bg-black/50"
-                         :icon="faList"/>
         <div class="h-1 absolute bg-red-500 bottom-0 z-0" :class="`w-${video.progress ? video.progress : 0}`"
              :style="`width: ${video.progress}%;`"></div>
         <p class="absolute text-sm bottom-0 right-0 m-1 p-0.5 rounded-sm text-white font-medium bg-black/50 mb-1.5">
@@ -147,9 +153,6 @@ const timeupdateVideo = (video, el) => {
         <RouterLink :to="'/channel/' + video.user.id" class="block text-sm text-gray-600 mt-1">
           {{ video.user.name }}
         </RouterLink>
-        <span v-if="!video.public" class="px-2 py-0.5 text-xs rounded-full" :class="video.public ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'">
-            Приватное
-          </span>
         <div class="text-xs text-gray-500 mt-2"> {{ video.created_at }}</div>
       </div>
     </div>

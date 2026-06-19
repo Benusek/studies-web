@@ -3,9 +3,8 @@ import Error from '@/components/Modal/Error.vue'
 import { inject, ref } from 'vue'
 import apiFetch from '@/helpers/apiFetch.js'
 import { faCheck } from '@fortawesome/free-solid-svg-icons'
-import File from '@/components/Modal/FileUpload.vue'
 import {removeFile, changeFile} from '@/helpers/fileHandler.js'
-import router from "@/router/index.js";
+import FileUpload from '@/components/Modal/FileUpload.vue'
 
 const updateToken = inject('updateToken')
 const showToast = inject('showToast')
@@ -73,7 +72,15 @@ const exit = async (message) => {
             :class="{'border border-red-600/70': form.errors[input.code]}"
             :autocomplete="input.type.includes('password') ? 'on' : null">
       </div>
-      <File v-else :file="form" :type="input.code" :name="input.label" @change="changeFile" @remove="removeFile"/>
+      <FileUpload
+        v-else
+        :errors="form.errors[input.code] || []"
+        :file="form.data"
+        :type="input.code"
+        :name="input.label"
+        @change="(event, key, source) => changeFile(event, key, form.data, source)"
+        @remove="(key) => removeFile(key, form.data, form.errors)"
+      />
       <Error :errors="form.errors[input.code]" />
     </li>
     <button :disabled="form.isProcess"  class="relative disabled:opacity-70 w-full bg-indigo-600 rounded-lg p-1.5

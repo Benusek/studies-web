@@ -1,18 +1,16 @@
 <script setup>
-import {ref} from 'vue'
-import {
-  faCloudArrowUp,
-  faXmark
-} from '@fortawesome/free-solid-svg-icons'
+import { ref } from 'vue'
+import { faCloudArrowUp, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 const dragover = ref(false)
 
 defineEmits(['change', 'remove'])
+
 defineProps({
   errors: {
     type: Array,
-    default: []
+    default: () => []
   },
   file: Object,
   type: String,
@@ -43,7 +41,6 @@ defineProps({
           class="hidden"
           :accept="['avatar','thumbnail'].includes(type) ? 'image/*' : 'video/*'"
           @change="$emit('change', $event, type, 'target')">
-
       <template v-if="file?.[type + 'blob']">
 
         <button

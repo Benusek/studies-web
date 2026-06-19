@@ -137,8 +137,20 @@ const post = async () => {
     <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
       <div class="xl:col-span-8 space-y-6">
         <div class="grid md:grid-cols-2 gap-6">
-          <FileUpload :key="`video-${fileKeys.video}`" :errors="form.errors.video" :file="form.data" label="Видео" type="video" @change="changeFile" @remove="removeFile" />
-          <FileUpload :key="`thumbnail-${fileKeys.thumbnail}`" :errors="form.errors.thumbnail" :file="form.data" label="Превью" type="thumbnail" @change="changeFile" @remove="removeFile"/>
+          <FileUpload :key="`video-${fileKeys.video}`" type="video"
+            :errors="form.errors.video || []"
+            :file="form.data"
+            :type="input.code"
+            @change="(event, key, source) => changeFile(event, key, form.data, source)"
+            @remove="(key) => removeFile(key, form.data, form.errors)"
+          />
+          <FileUpload
+            :key="`thumbnail-${fileKeys.thumbnail}`" type="thumbnail"
+            :errors="form.errors.thumbnail || []"
+            :file="form.data"
+            @change="(event, key, source) => changeFile(event, key, form.data, source)"
+            @remove="(key) => removeFile(key, form.data, form.errors)"
+          />
         </div>
         <div class="rounded-3xl border border-zinc-200 bg-white p-6">
           <h2 class="text-lg font-semibold mb-5">
@@ -211,7 +223,7 @@ const post = async () => {
                   : 'bg-white border-zinc-300 text-zinc-700 hover:border-indigo-500'"
                 class="px-3 py-2 rounded-full border text-sm transition cursor-pointer"
                 type="button"
-                @click="toggleArray(tag.id)">
+                @click="toggleArray(form.data.tags, tag.id)">
               #{{ tag.name }}
             </button>
           </div>

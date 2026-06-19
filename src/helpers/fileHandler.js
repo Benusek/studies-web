@@ -1,39 +1,32 @@
-export const changeFile = (event, key, form) => {
-    const file = event.target.files?.[0]
+export const changeFile = (event, key, form, source = 'target') => {
+    const file =
+      source === 'dataTransfer'
+        ? event.dataTransfer?.files?.[0]
+        : event.target?.files?.[0]
 
-    if (!file) {
-        return
+    if (!file) return
+    console.log(file)
+    form[key] = file
+    form[key + 'name'] = file.name
+
+    if (form[key + 'blob']) {
+        URL.revokeObjectURL(form[key + 'blob'])
     }
 
-    form.data[key] = file
-    form.data[key + 'name'] = file.name
-
-    if (form.data[key + 'blob']) {
-        URL.revokeObjectURL(
-            form.data[key + 'blob']
-        )
-    }
-
-    form.data[key + 'blob'] =
-        URL.createObjectURL(file)
+    form[key + 'blob'] = URL.createObjectURL(file)
+    console.log(form[key + 'blob'])
 }
 
-
-export const removeFile = (key, form) => {
-
-    if (form.value.data[key + 'blob']) {
-        URL.revokeObjectURL(
-            form.value.data[key + 'blob']
-        )
+export const removeFile = (key, form, errors = null) => {
+    if (form[key + 'blob']) {
+        URL.revokeObjectURL(form[key + 'blob'])
     }
 
+    delete form[key]
+    delete form[key + 'blob']
+    delete form[key + 'name']
 
-    delete form.value.data[key]
-    delete form.value.data[key + 'blob']
-    delete form.value.data[key + 'name']
-
-
-    if (form.value.errors[key]) {
-        delete form.value.errors[key]
+    if (errors?.[key]) {
+        delete errors[key]
     }
 }
